@@ -44,8 +44,8 @@ class GameBoard @JvmOverloads constructor(context: Context, attributeSet: Attrib
         }
 
     private fun PointF.calculateCoordinate(row: Int, col: Int) {
-        y = if (row == 0) gap else (row * cellWidth) + (gap * 0.5f)
-        x = if (col == 0) gap else (col * cellWidth) + (gap * 0.5f)
+        y = if (row == 0) gap else (row * cellWidth) + (gap)
+        x = if (col == 0) gap else (col * cellWidth) + (gap)
     }
 
     private fun right(pos: Int): Float {
@@ -89,7 +89,7 @@ class GameBoard @JvmOverloads constructor(context: Context, attributeSet: Attrib
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         cellWidth = width / col.toFloat()
-        gap = (cellWidth / col.toFloat()) / 2
+        gap = (cellWidth / col.toFloat()) / 4
         smallWidth = cellWidth - (gap * 2)
     }
 
