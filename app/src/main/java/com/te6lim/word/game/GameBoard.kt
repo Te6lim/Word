@@ -48,10 +48,15 @@ class GameBoard constructor(context: Context, attributeSet: AttributeSet) : View
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+        var widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
 
-        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+        var widthSize = MeasureSpec.getSize(widthMeasureSpec)
+
+        if (widthMode == MeasureSpec.AT_MOST) {
+            widthMode = MeasureSpec.EXACTLY
+            widthSize = MeasureSpec.getSize(widthMode)
+        }
 
         var heightSize = MeasureSpec.getSize(heightMeasureSpec)
         if (heightMode == MeasureSpec.AT_MOST) {
