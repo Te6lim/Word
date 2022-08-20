@@ -9,4 +9,7 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="strokeColor">#838383</color>
+    <color name="correctLetter">#6BAA64</color>
+    <color name="misplacedLetter">#C9B457</color>
+    <color name="wrongLetter">#787C7F</color>
 </resources>

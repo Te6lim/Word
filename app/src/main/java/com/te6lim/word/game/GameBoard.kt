@@ -9,7 +9,11 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import com.te6lim.word.R
 
-class GameBoard constructor(context: Context, attributeSet: AttributeSet) : View(context, attributeSet) {
+class GameBoard @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null) : View
+    (
+    context,
+    attributeSet
+) {
     private val attributeArray = context.theme
         .obtainStyledAttributes(attributeSet, R.styleable.GameBoard, 0, 0)
 
@@ -29,9 +33,19 @@ class GameBoard constructor(context: Context, attributeSet: AttributeSet) : View
 
     private val point = PointF(0f, 0f)
 
+    private var correctColor = R.color.correctLetter
+    private var misplacedColor = R.color.misplacedLetter
+    private var wrongColor = R.color.wrongLetter
+
+    var guesses = listOf<WordGame.GuessInfo>()
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     private fun PointF.calculateCoordinate(row: Int, col: Int) {
-        y = if (row == 0) 0f else (row * cellWidth) + gap
-        x = if (col == 0) 0f else (col * cellWidth) + gap
+        y = if (row == 0) gap else (row * cellWidth) + (gap * 0.5f)
+        x = if (col == 0) gap else (col * cellWidth) + (gap * 0.5f)
     }
 
     private fun right(pos: Int): Float {
@@ -44,6 +58,11 @@ class GameBoard constructor(context: Context, attributeSet: AttributeSet) : View
 
     private fun drawSquare(row: Int, col: Int, canvas: Canvas) {
         point.calculateCoordinate(row, col)
+        canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
+    }
+
+    private fun drawCorrectSquare(row: Int, col: Int, char: Char, canvas: Canvas) {
+        paint.style = Paint.Style.FILL
         canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
     }
 
@@ -71,7 +90,7 @@ class GameBoard constructor(context: Context, attributeSet: AttributeSet) : View
         super.onSizeChanged(w, h, oldw, oldh)
         cellWidth = width / col.toFloat()
         gap = (cellWidth / col.toFloat()) / 2
-        smallWidth = cellWidth - gap
+        smallWidth = cellWidth - (gap * 2)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -80,7 +99,7 @@ class GameBoard constructor(context: Context, attributeSet: AttributeSet) : View
 
         for (i in 0 until row) {
             for (j in 0 until col) {
-                drawSquare(i, j, canvas)
+                drawSquare(i, j, canvas = canvas)
             }
         }
     }
