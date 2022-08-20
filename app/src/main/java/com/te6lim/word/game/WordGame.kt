@@ -14,7 +14,6 @@ class WordGame(wordRepository: WordRepository) {
     private lateinit var word: String
 
     init {
-
     }
 
     fun guessWord(guessWord: String): GuessInfo {

@@ -7,6 +7,5 @@ fun WordGame.GuessInfo.copy(): WordGame.GuessInfo {
         it.misplacedCharacters = this.misplacedCharacters
         it.numberOfGuesses = this.numberOfGuesses
         it.wrongCharacters = this.wrongCharacters
-        it.trials = this.trials
     }
 }
