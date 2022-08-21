@@ -1,12 +1,9 @@
 package com.te6lim.word.game
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PointF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
-import androidx.core.content.ContextCompat
 import com.te6lim.word.R
 
 class GameBoard @JvmOverloads
@@ -24,24 +21,34 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
 
     private val point = PointF(0f, 0f)
 
-    private var correctColor = R.color.correctLetter
-    private var misplacedColor = R.color.misplacedLetter
-    private var wrongColor = R.color.wrongLetter
-    private var textColor = R.color.white
+    private var correctColor = Color.rgb(107, 170, 100)
+    private var misplacedColor = Color.rgb(201, 180, 87)
+    private var wrongColor = Color.rgb(120, 124, 127)
+    private var textColor = Color.rgb(255, 255, 255)
 
     var guesses = listOf<WordGame.GuessInfo>()
         set(value) {
             field = value
+            generateLetters()
             invalidate()
         }
 
-    private val squares = arrayListOf<ArrayList<Square>>()
+    private var squares = arrayListOf<ArrayList<Square>>()
 
     init {
+
+    }
+
+    private fun generateLetters() {
+        squares = arrayListOf()
+        var letter: Char
         for (i in 0 until row) {
             squares.add(arrayListOf())
             for (j in 0 until col) {
-                squares[i].add(Square(context, i, j))
+                letter = if (i < guesses.size)
+                    guesses[i].characterArray[j]
+                else '\u0000'
+                squares[i].add(Square(context, i, j, letter.uppercaseChar()))
             }
         }
     }
@@ -55,7 +62,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
     }
 
     private fun drawSquare(row: Int, col: Int, canvas: Canvas) {
-        squares[row][col].performDraw(canvas, row, col)
+        squares[row][col].performDraw(canvas)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -81,34 +88,36 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         cellWidth = width / col.toFloat()
-        gap = (cellWidth / col.toFloat()) / 4
+        gap = (cellWidth / col.toFloat()) / 4f
         smallWidth = cellWidth - (gap * 2)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         for (i in 0 until row) {
-            for (j in 0 until col) {
-                drawSquare(i, j, canvas = canvas)
-            }
+            for (j in 0 until col) drawSquare(i, j, canvas = canvas)
         }
     }
 
-    inner class Square
-    @JvmOverloads constructor(
-        context: Context, private val row: Int, private val col: Int, attributeSet: AttributeSet? = null
-    ) : View(context, attributeSet) {
+    inner class Square(
+        context: Context, private val row: Int, private val col: Int, private val letter: Char = '\u0000'
+    ) : View(context) {
 
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = ContextCompat.getColor(context, R.color.strokeColor)
+            color = Color.rgb(120, 124, 127)
             style = Paint.Style.STROKE
             strokeWidth = context.resources.getDimension(R.dimen.strokeWidth)
             isAntiAlias = true
         }
 
-        private fun PointF.calculateCoordinate(row: Int, col: Int) {
+        private fun PointF.calculateCoordinate() {
             y = if (row == 0) gap else (row * cellWidth) + (gap)
             x = if (col == 0) gap else (col * cellWidth) + (gap)
+        }
+
+        private fun PointF.calculateTextPosition() {
+            y = if (row == 0) cellWidth * 0.65f else ((row + 1) * cellWidth) - (cellWidth * 0.35f)
+            x = if (col == 0) cellWidth / 2f else ((col + 1) * cellWidth) - (cellWidth / 2f)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -116,13 +125,23 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
         }
 
         override fun onDraw(canvas: Canvas) {
+            point.calculateCoordinate()
+            paint.apply {
+                style = Paint.Style.STROKE
+            }
             canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
+            point.calculateTextPosition()
+            paint.apply {
+                style = Paint.Style.FILL
+                textAlign = Paint.Align.CENTER
+                textSize = smallWidth / 2f
+                typeface = Typeface.create("", Typeface.BOLD)
+            }
+            canvas.drawText(letter.toString(), point.x, point.y, paint)
         }
 
-        fun performDraw(canvas: Canvas, row: Int, col: Int) {
-            point.calculateCoordinate(row, col)
+        fun performDraw(canvas: Canvas) {
             draw(canvas)
-
         }
     }
 }

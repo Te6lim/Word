@@ -8,6 +8,7 @@
     tools:context=".MainActivity">
 
     <com.te6lim.word.game.GameBoard
+        android:id="@+id/gameBoard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
