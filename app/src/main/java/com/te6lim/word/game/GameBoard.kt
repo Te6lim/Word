@@ -9,19 +9,10 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import com.te6lim.word.R
 
-class GameBoard @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null) : View
-    (
-    context,
-    attributeSet
-) {
+class GameBoard @JvmOverloads
+constructor(context: Context, attributeSet: AttributeSet? = null) : View(context, attributeSet) {
     private val attributeArray = context.theme
         .obtainStyledAttributes(attributeSet, R.styleable.GameBoard, 0, 0)
-
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = context.resources.getDimension(R.dimen.strokeWidth)
-        isAntiAlias = true
-    }
 
     private var cellWidth = 0.0f
     private var smallWidth = 0.0f
@@ -36,6 +27,7 @@ class GameBoard @JvmOverloads constructor(context: Context, attributeSet: Attrib
     private var correctColor = R.color.correctLetter
     private var misplacedColor = R.color.misplacedLetter
     private var wrongColor = R.color.wrongLetter
+    private var textColor = R.color.white
 
     var guesses = listOf<WordGame.GuessInfo>()
         set(value) {
@@ -43,9 +35,15 @@ class GameBoard @JvmOverloads constructor(context: Context, attributeSet: Attrib
             invalidate()
         }
 
-    private fun PointF.calculateCoordinate(row: Int, col: Int) {
-        y = if (row == 0) gap else (row * cellWidth) + (gap)
-        x = if (col == 0) gap else (col * cellWidth) + (gap)
+    private val squares = arrayListOf<ArrayList<Square>>()
+
+    init {
+        for (i in 0 until row) {
+            squares.add(arrayListOf())
+            for (j in 0 until col) {
+                squares[i].add(Square(context, i, j))
+            }
+        }
     }
 
     private fun right(pos: Int): Float {
@@ -57,13 +55,7 @@ class GameBoard @JvmOverloads constructor(context: Context, attributeSet: Attrib
     }
 
     private fun drawSquare(row: Int, col: Int, canvas: Canvas) {
-        point.calculateCoordinate(row, col)
-        canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
-    }
-
-    private fun drawCorrectSquare(row: Int, col: Int, char: Char, canvas: Canvas) {
-        paint.style = Paint.Style.FILL
-        canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
+        squares[row][col].performDraw(canvas, row, col)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -95,12 +87,42 @@ class GameBoard @JvmOverloads constructor(context: Context, attributeSet: Attrib
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        paint.color = ContextCompat.getColor(context, R.color.strokeColor)
-
         for (i in 0 until row) {
             for (j in 0 until col) {
                 drawSquare(i, j, canvas = canvas)
             }
+        }
+    }
+
+    inner class Square
+    @JvmOverloads constructor(
+        context: Context, private val row: Int, private val col: Int, attributeSet: AttributeSet? = null
+    ) : View(context, attributeSet) {
+
+        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = ContextCompat.getColor(context, R.color.strokeColor)
+            style = Paint.Style.STROKE
+            strokeWidth = context.resources.getDimension(R.dimen.strokeWidth)
+            isAntiAlias = true
+        }
+
+        private fun PointF.calculateCoordinate(row: Int, col: Int) {
+            y = if (row == 0) gap else (row * cellWidth) + (gap)
+            x = if (col == 0) gap else (col * cellWidth) + (gap)
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            setMeasuredDimension(smallWidth.toInt(), smallWidth.toInt())
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
+        }
+
+        fun performDraw(canvas: Canvas, row: Int, col: Int) {
+            point.calculateCoordinate(row, col)
+            draw(canvas)
+
         }
     }
 }
