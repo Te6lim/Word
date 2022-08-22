@@ -15,8 +15,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var cellWidth = 0.0f
 
 
-    private val row = attributeArray.getInt(R.styleable.GameBoard_row, 1)
-    private val col = attributeArray.getInt(R.styleable.GameBoard_col, 1)
+    private val attrRow = attributeArray.getInt(R.styleable.GameBoard_row, 1)
+    private val attrCol = attributeArray.getInt(R.styleable.GameBoard_col, 1)
 
     private val point = PointF(0f, 0f)
 
@@ -41,9 +41,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private fun generateLetters() {
         squares = arrayListOf()
         var letter: Char
-        for (i in 0 until row) {
+        for (i in 0 until attrRow) {
             squares.add(arrayListOf())
-            for (j in 0 until col) {
+            for (j in 0 until attrCol) {
                 letter = if (i < guesses.size)
                     guesses[i].characterArray[j]
                 else '\u0000'
@@ -83,8 +83,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         var heightSize = MeasureSpec.getSize(heightMeasureSpec)
         if (heightMode == MeasureSpec.AT_MOST) {
-            heightSize = if (row >= col) widthSize + ((widthSize / col) * (row - col))
-            else (widthSize / col) * row
+            heightSize = if (attrRow >= attrCol) widthSize + ((widthSize / attrCol) * (attrRow - attrCol))
+            else (widthSize / attrCol) * attrRow
         }
 
         setMeasuredDimension(widthSize, heightSize)
@@ -92,19 +92,19 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        cellWidth = width / col.toFloat()
+        cellWidth = width / attrCol.toFloat()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        for (i in 0 until row) {
+        for (i in 0 until attrRow) {
             //for (j in 0 until col) drawSquare(i, j, canvas = canvas)
         }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        for (i in 0 until row) {
-            for (j in 0 until col) {
+        for (i in 0 until attrRow) {
+            for (j in 0 until attrCol) {
                 point.calculateCoordinate(i, j)
                 squares[i][j].layout(point.x.toInt(), point.y.toInt(), right(j).toInt(), bottom(i).toInt())
             }
@@ -137,10 +137,34 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             point.calculateCoordinate(row, col)
             paint.apply {
                 style = Paint.Style.STROKE
+                paint.style = Paint.Style.STROKE
+                paint.color = wrongColor
             }
-            canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+
+            if (row < guesses.size && guesses[row].isMisplaced(letter)) {
+                paint.style = Paint.Style.FILL
+                paint.color = misplacedColor
+                canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+            } else {
+                if (row < guesses.size && guesses[row].isRight(letter)) {
+                    paint.style = Paint.Style.FILL
+                    paint.color = correctColor
+                    canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                } else {
+                    if (row < guesses.size && guesses[row].isWrong(letter)) {
+                        paint.style = Paint.Style.FILL
+                        paint.color = wrongColor
+                        canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                    } else {
+                        paint.style = Paint.Style.STROKE
+                        paint.color = wrongColor
+                        canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                    }
+                }
+            }
             point.calculateTextPosition()
             paint.apply {
+                color = textColor
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
                 textSize = cellWidth / 2f

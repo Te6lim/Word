@@ -13,9 +13,11 @@ class MainActivity : AppCompatActivity() {
         val gameBoard = findViewById<GameBoard>(R.id.gameBoard)
 
         val game = WordGame()
-        game.guessWord("water")
-        game.guessWord("Brown")
-        game.guessWord("forte")
+
+        game.setGuessWord("drain")
+        game.setGuessWord("rifle")
+        game.setGuessWord("shire")
+
         gameBoard.guesses = game.guesses
     }
 }

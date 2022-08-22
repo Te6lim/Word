@@ -10,7 +10,10 @@ class WordGame(wordRepository: WordRepository? = null) {
 
     private var t = 0
 
-    private var word: String = "clown"
+    private var word: String = "SHIRE"
+        set(value) {
+            field = value.uppercase()
+        }
 
     var guesses: List<GuessInfo> = mutableListOf()
         private set
@@ -18,10 +21,10 @@ class WordGame(wordRepository: WordRepository? = null) {
     init {
     }
 
-    fun guessWord(guessWord: String): GuessInfo? {
+    fun setGuessWord(guessWord: String): GuessInfo? {
         verifyWord(guessWord)
         if (t < MAX_TRIAL) {
-            val guessInfo = GuessInfo(guessWord, word)
+            val guessInfo = GuessInfo(guessWord)
             guesses = guesses.toMutableList().apply { add(guessInfo.apply { trial = ++t }) }
             return guessInfo.copy()
         }
@@ -32,7 +35,7 @@ class WordGame(wordRepository: WordRepository? = null) {
         if (w.length < word.length || w.length > word.length) throw IllegalArgumentException()
     }
 
-    class GuessInfo(private val guess: String, private val word: String) {
+    inner class GuessInfo(guess: String) {
         var characterArray = arrayListOf<Char>()
 
         private var misplacedCharacters = listOf<Char>()
@@ -40,6 +43,8 @@ class WordGame(wordRepository: WordRepository? = null) {
         private var wrongCharacters = listOf<Char>()
 
         var trial = 0
+
+        private val guessWord = guess.uppercase()
 
         init {
             if (guess.isNotEmpty()) {
@@ -53,16 +58,18 @@ class WordGame(wordRepository: WordRepository? = null) {
 
         private fun misplacedCharacters(): List<Char> {
             val characters = mutableListOf<Char>()
-            for ((i, c) in word.withIndex()) {
-                if (c != guess[i] && guess.contains(c)) characters.add(c)
+            for ((i, c) in guessWord.withIndex()) {
+                if (c != word[i] && word.contains(c)) {
+                    characters.add(c)
+                }
             }
             return characters
         }
 
         private fun wrongCharacters(): List<Char> {
             val characters = mutableListOf<Char>()
-            for (c in word) {
-                if (!guess.contains(c)) characters.add(c)
+            for ((i, c) in guessWord.withIndex()) {
+                if (!word.contains(c)) characters.add(c)
             }
             return characters
         }
@@ -70,21 +77,21 @@ class WordGame(wordRepository: WordRepository? = null) {
         fun isCorrect() = misplacedCharacters.isEmpty() && wrongCharacters.isEmpty() && trial > 0
 
         fun isMisplaced(char: Char): Boolean {
-            if (misplacedCharacters.contains(char)) return true
+            if (misplacedCharacters.contains(char.uppercaseChar())) return true
             return false
         }
 
         fun isWrong(char: Char): Boolean {
-            if (wrongCharacters.contains(char)) return true
+            if (wrongCharacters.contains(char.uppercaseChar())) return true
             return false
         }
 
         fun isRight(char: Char): Boolean {
-            return !this.isMisplaced(char) && !this.isWrong(char)
+            return !this.isMisplaced(char.uppercaseChar()) && !this.isWrong(char.uppercaseChar())
         }
 
-        fun copy(): WordGame.GuessInfo {
-            return GuessInfo(guess, word).also {
+        fun copy(): GuessInfo {
+            return GuessInfo(guessWord).also {
                 it.misplacedCharacters = this.misplacedCharacters
                 it.trial = this.trial
                 it.wrongCharacters = this.wrongCharacters
