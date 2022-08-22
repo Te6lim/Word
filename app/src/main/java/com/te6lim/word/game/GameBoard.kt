@@ -16,8 +16,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         .obtainStyledAttributes(attributeSet, R.styleable.GameBoard, 0, 0)
 
     private var cellWidth = 0.0f
-    private var smallWidth = 0.0f
-    private var gap = 0.0f
 
 
     private val row = attributeArray.getInt(R.styleable.GameBoard_row, 1)
@@ -39,11 +37,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var squares = arrayListOf<ArrayList<Square>>()
 
-    private fun PointF.calculateCoordinate(r: Int, c: Int) {
-        y = if (r == 0) gap else (r * cellWidth) + (gap)
-        x = if (c == 0) gap else (c * cellWidth) + (gap)
-    }
-
     init {
 
     }
@@ -63,12 +56,17 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
     }
 
+    private fun PointF.calculateCoordinate(r: Int, c: Int) {
+        y = if (r == 0) 0f else (r * cellWidth)
+        x = if (c == 0) 0f else (c * cellWidth)
+    }
+
     private fun right(pos: Int): Float {
-        return ((pos * cellWidth) + smallWidth) + gap
+        return ((pos * cellWidth) + cellWidth)
     }
 
     private fun bottom(pos: Int): Float {
-        return ((pos * cellWidth) + smallWidth) + gap
+        return ((pos * cellWidth) + cellWidth)
     }
 
     private fun drawSquare(row: Int, col: Int, canvas: Canvas) {
@@ -98,8 +96,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         cellWidth = width / col.toFloat()
-        gap = (cellWidth / col.toFloat()) / 4f
-        smallWidth = cellWidth - (gap * 2)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -122,10 +118,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         context: Context, private val row: Int, private val col: Int, private val letter: Char = '\u0000'
     ) : View(context) {
 
+        private val stroke = context.resources.getDimension(R.dimen.strokeWidth)
+
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.rgb(120, 124, 127)
             style = Paint.Style.STROKE
-            strokeWidth = context.resources.getDimension(R.dimen.strokeWidth)
+            strokeWidth = stroke
             isAntiAlias = true
         }
 
@@ -135,7 +133,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension(cellWidth.toInt(), cellWidth.toInt())
+            setMeasuredDimension((cellWidth).toInt(), (cellWidth).toInt())
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -143,7 +141,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             /*paint.apply {
                 style = Paint.Style.STROKE
             }*/
-            canvas.drawRect(gap / 2, gap / 2, smallWidth - (gap / 2), smallWidth - (gap / 2), paint)
+            canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
             //point.calculateTextPosition()
             /*paint.apply {
                 style = Paint.Style.FILL
