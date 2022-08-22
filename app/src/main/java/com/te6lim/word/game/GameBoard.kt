@@ -1,13 +1,17 @@
 package com.te6lim.word.game
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup
 import com.te6lim.word.R
 
 class GameBoard @JvmOverloads
-constructor(context: Context, attributeSet: AttributeSet? = null) : View(context, attributeSet) {
+constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(context, attributeSet) {
     private val attributeArray = context.theme
         .obtainStyledAttributes(attributeSet, R.styleable.GameBoard, 0, 0)
 
@@ -35,6 +39,11 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
 
     private var squares = arrayListOf<ArrayList<Square>>()
 
+    private fun PointF.calculateCoordinate(r: Int, c: Int) {
+        y = if (r == 0) gap else (r * cellWidth) + (gap)
+        x = if (c == 0) gap else (c * cellWidth) + (gap)
+    }
+
     init {
 
     }
@@ -49,6 +58,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
                     guesses[i].characterArray[j]
                 else '\u0000'
                 squares[i].add(Square(context, i, j, letter.uppercaseChar()))
+                addView(squares[i][j])
             }
         }
     }
@@ -62,7 +72,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
     }
 
     private fun drawSquare(row: Int, col: Int, canvas: Canvas) {
-        squares[row][col].performDraw(canvas)
+        squares[row][col].draw(canvas)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -95,7 +105,16 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         for (i in 0 until row) {
-            for (j in 0 until col) drawSquare(i, j, canvas = canvas)
+            //for (j in 0 until col) drawSquare(i, j, canvas = canvas)
+        }
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        for (i in 0 until row) {
+            for (j in 0 until col) {
+                point.calculateCoordinate(i, j)
+                squares[i][j].layout(point.x.toInt(), point.y.toInt(), right(j).toInt(), bottom(i).toInt())
+            }
         }
     }
 
@@ -110,38 +129,29 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : View(context
             isAntiAlias = true
         }
 
-        private fun PointF.calculateCoordinate() {
-            y = if (row == 0) gap else (row * cellWidth) + (gap)
-            x = if (col == 0) gap else (col * cellWidth) + (gap)
-        }
-
         private fun PointF.calculateTextPosition() {
             y = if (row == 0) cellWidth * 0.65f else ((row + 1) * cellWidth) - (cellWidth * 0.35f)
             x = if (col == 0) cellWidth / 2f else ((col + 1) * cellWidth) - (cellWidth / 2f)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension(smallWidth.toInt(), smallWidth.toInt())
+            setMeasuredDimension(cellWidth.toInt(), cellWidth.toInt())
         }
 
         override fun onDraw(canvas: Canvas) {
-            point.calculateCoordinate()
-            paint.apply {
+            //point.calculateCoordinate()
+            /*paint.apply {
                 style = Paint.Style.STROKE
-            }
-            canvas.drawRect(point.x, point.y, right(col), bottom(row), paint)
-            point.calculateTextPosition()
-            paint.apply {
+            }*/
+            canvas.drawRect(gap / 2, gap / 2, smallWidth - (gap / 2), smallWidth - (gap / 2), paint)
+            //point.calculateTextPosition()
+            /*paint.apply {
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
                 textSize = smallWidth / 2f
                 typeface = Typeface.create("", Typeface.BOLD)
             }
-            canvas.drawText(letter.toString(), point.x, point.y, paint)
-        }
-
-        fun performDraw(canvas: Canvas) {
-            draw(canvas)
+            canvas.drawText(letter.toString(), point.x, point.y, paint)*/
         }
     }
 }
