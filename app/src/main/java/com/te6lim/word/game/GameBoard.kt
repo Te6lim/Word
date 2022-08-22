@@ -1,10 +1,7 @@
 package com.te6lim.word.game
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PointF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
@@ -128,8 +125,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         private fun PointF.calculateTextPosition() {
-            y = if (row == 0) cellWidth * 0.65f else ((row + 1) * cellWidth) - (cellWidth * 0.35f)
-            x = if (col == 0) cellWidth / 2f else ((col + 1) * cellWidth) - (cellWidth / 2f)
+            y = (cellWidth * 0.65f)
+            x = (cellWidth * 0.5f)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -137,19 +134,19 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onDraw(canvas: Canvas) {
-            //point.calculateCoordinate()
-            /*paint.apply {
+            point.calculateCoordinate(row, col)
+            paint.apply {
                 style = Paint.Style.STROKE
-            }*/
+            }
             canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
-            //point.calculateTextPosition()
-            /*paint.apply {
+            point.calculateTextPosition()
+            paint.apply {
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
-                textSize = smallWidth / 2f
+                textSize = cellWidth / 2f
                 typeface = Typeface.create("", Typeface.BOLD)
             }
-            canvas.drawText(letter.toString(), point.x, point.y, paint)*/
+            canvas.drawText(letter.toString(), point.x, point.y, paint)
         }
     }
 }
