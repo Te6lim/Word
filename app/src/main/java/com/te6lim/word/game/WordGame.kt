@@ -15,24 +15,31 @@ class WordGame(wordRepository: WordRepository? = null) {
             field = value.uppercase()
         }
 
-    var guesses: List<GuessInfo> = mutableListOf()
+    private var guessWord = StringBuilder(5)
+
+    private var guesses: List<GuessInfo> = mutableListOf()
         private set
 
-    init {
+    fun addLetter(letter: Char) {
+        if (guessWord.length < guessWord.capacity()) guessWord.append(letter)
     }
 
-    fun setGuessWord(guessWord: String): GuessInfo? {
-        verifyWord(guessWord)
+    fun removeLetter(char: Int) {
+        guessWord.deleteCharAt(guessWord.length - 1)
+    }
+
+    fun getAllGuesses(): List<GuessInfo> {
+        verifyWord(guessWord.toString())
         if (t < MAX_TRIAL) {
-            val guessInfo = GuessInfo(guessWord)
+            val guessInfo = GuessInfo(guessWord.toString())
             guesses = guesses.toMutableList().apply { add(guessInfo.apply { trial = ++t }) }
-            return guessInfo.copy()
+            return guesses
         }
-        return null
+        return listOf()
     }
 
     private fun verifyWord(w: String) {
-        if (w.length < word.length || w.length > word.length) throw IllegalArgumentException()
+        if (w.length > word.length) throw IllegalArgumentException()
     }
 
     inner class GuessInfo(guess: String) {

@@ -14,10 +14,6 @@ class MainActivity : AppCompatActivity() {
 
         val game = WordGame()
 
-        game.setGuessWord("drain")
-        game.setGuessWord("rifle")
-        game.setGuessWord("shire")
-
-        gameBoard.guesses = game.guesses
+        //gameBoard.guesses = game.getAllGuesses()
     }
 }

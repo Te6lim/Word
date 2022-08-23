@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import com.te6lim.word.R
+import kotlin.math.roundToInt
 
 class GameBoard @JvmOverloads
 constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(context, attributeSet) {
@@ -25,9 +26,23 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var wrongColor = Color.rgb(120, 124, 127)
     private var textColor = Color.rgb(255, 255, 255)
 
+    private var frameColor = Color.rgb(206, 206, 206)
+
+    private val density = resources.displayMetrics.density
+
+    private val stroke = density * 2
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = frameColor
+        style = Paint.Style.STROKE
+        strokeWidth = stroke
+        isAntiAlias = true
+    }
+
     var guesses = listOf<WordGame.GuessInfo>()
         set(value) {
             field = value
+            removeAllViews()
             generateLetters()
             invalidate()
         }
@@ -35,7 +50,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var squares = arrayListOf<ArrayList<Square>>()
 
     init {
-
+        generateLetters()
     }
 
     private fun generateLetters() {
@@ -44,8 +59,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         for (i in 0 until attrRow) {
             squares.add(arrayListOf())
             for (j in 0 until attrCol) {
-                letter = if (i < guesses.size)
-                    guesses[i].characterArray[j]
+                letter = if (i < guesses.size) guesses[i].characterArray[j]
                 else '\u0000'
                 squares[i].add(Square(context, i, j, letter.uppercaseChar()))
                 addView(squares[i][j])
@@ -77,7 +91,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         var widthSize = MeasureSpec.getSize(widthMeasureSpec)
 
         if (widthMode == MeasureSpec.AT_MOST) {
-            widthMode = MeasureSpec.EXACTLY
+            widthMode = MeasureSpec.getMode(MeasureSpec.EXACTLY)
             widthSize = MeasureSpec.getSize(widthMode)
         }
 
@@ -115,22 +129,13 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         context: Context, private val row: Int, private val col: Int, private val letter: Char = '\u0000'
     ) : View(context) {
 
-        private val stroke = context.resources.getDimension(R.dimen.strokeWidth)
-
-        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(120, 124, 127)
-            style = Paint.Style.STROKE
-            strokeWidth = stroke
-            isAntiAlias = true
-        }
-
         private fun PointF.calculateTextPosition() {
             y = (cellWidth * 0.65f)
             x = (cellWidth * 0.5f)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension((cellWidth).toInt(), (cellWidth).toInt())
+            setMeasuredDimension((cellWidth).roundToInt(), (cellWidth).roundToInt())
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -157,7 +162,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                         canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
                     } else {
                         paint.style = Paint.Style.STROKE
-                        paint.color = wrongColor
+                        paint.color = frameColor
                         canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
                     }
                 }
