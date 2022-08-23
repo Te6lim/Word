@@ -3,6 +3,7 @@ package com.te6lim.word.game
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.View
@@ -34,12 +35,17 @@ class KeyBoardView @JvmOverloads constructor(
     private val point = PointF(0f, 0f)
 
     init {
-        for (c in topChars) topKeys.add(KeyView(KeyType.TOP).apply { addView(this) })
-        for (c in middleChars) middleKeys.add(KeyView(KeyType.MIDDLE).apply { addView(this) })
-        for (c in bottomChars) bottomKeys.add(KeyView(KeyType.BOTTOM).apply { addView(this) })
+        for (c in topChars) topKeys.add(KeyView(KeyType.TOP, c).apply { addView(this) })
+        for (c in middleChars) middleKeys.add(KeyView(KeyType.MIDDLE, c).apply { addView(this) })
+        for (c in bottomChars) bottomKeys.add(KeyView(KeyType.BOTTOM, c).apply { addView(this) })
     }
 
     private val keyColor = Color.rgb(211, 214, 219)
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = keyColor
+    }
 
     private fun PointF.computeXYForKey(type: KeyType, position: Int) {
         when (type) {
@@ -60,41 +66,41 @@ class KeyBoardView @JvmOverloads constructor(
     }
 
     private fun right(type: KeyType, pos: Int): Float {
-        when (type) {
+        return when (type) {
             KeyType.TOP -> {
-                return ((pos * keyWidth) + keyWidth)
+                ((pos * keyWidth) + keyWidth)
             }
 
             KeyType.MIDDLE -> {
-                return secondRowConst + (pos * keyWidth) + keyWidth
+                secondRowConst + (pos * keyWidth) + keyWidth
             }
 
             KeyType.BOTTOM -> {
-                return thirdRowConst + (pos * keyWidth) + keyWidth
+                thirdRowConst + (pos * keyWidth) + keyWidth
             }
         }
     }
 
     private fun bottom(type: KeyType): Float {
-        when (type) {
+        return when (type) {
             KeyType.TOP -> {
-                return keyHeight
+                keyHeight
             }
 
             KeyType.MIDDLE -> {
-                return 2 * keyHeight
+                2 * keyHeight
             }
 
             KeyType.BOTTOM -> {
-                return 3 * keyHeight
+                3 * keyHeight
             }
         }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        for ((i, k) in topKeys.withIndex()) {
+        for ((i, key) in topKeys.withIndex()) {
             point.computeXYForKey(KeyType.TOP, i)
-            topKeys[i].layout(
+            key.layout(
                 point.x.toInt(), point.y.toInt(),
                 right(KeyType.TOP, i).toInt(), bottom(KeyType.TOP).toInt()
             )
@@ -102,7 +108,7 @@ class KeyBoardView @JvmOverloads constructor(
 
         for ((i, k) in middleKeys.withIndex()) {
             point.computeXYForKey(KeyType.MIDDLE, i)
-            middleKeys[i].layout(
+            k.layout(
                 point.x.toInt(), point.y.toInt(),
                 right(KeyType.MIDDLE, i).toInt(), bottom(KeyType.MIDDLE).toInt()
             )
@@ -133,7 +139,6 @@ class KeyBoardView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)
 
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
@@ -154,14 +159,26 @@ class KeyBoardView @JvmOverloads constructor(
         super.onDraw(canvas)
     }
 
-    inner class KeyView(type: KeyType) : View(context) {
+    inner class KeyView(type: KeyType, private val char: Char) : View(context) {
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             setMeasuredDimension(keyWidth.roundToInt(), keyHeight.roundToInt())
         }
 
         override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
+            if (char != bottomChars[0] && char != bottomChars[bottomChars.size - 1]) {
+                canvas.drawRoundRect(
+                    keyWidth / 10, keyWidth / 10, (keyWidth - (keyWidth / 10)), (keyHeight) -
+                            (keyWidth / 10), (keyWidth / 10), keyWidth / 10, paint
+                )
+            } else {
+                canvas.drawRoundRect(
+                    keyWidth / 10, keyWidth / 10, ((keyWidth + (keyWidth * 0.5f)) -
+                            (keyWidth / 10)),
+                    (keyHeight) -
+                            (keyWidth / 10), (keyWidth / 10), keyWidth / 10, paint
+                )
+            }
         }
     }
 }
