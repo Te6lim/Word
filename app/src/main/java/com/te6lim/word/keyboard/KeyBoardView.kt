@@ -1,21 +1,23 @@
-package com.te6lim.word.game
+package com.te6lim.word.keyboard
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PointF
+import android.graphics.*
 import android.util.AttributeSet
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import kotlin.math.roundToInt
 
 class KeyBoardView @JvmOverloads constructor(
-    context: Context, private val attributeSet: AttributeSet? = null
+    context: Context, attributeSet: AttributeSet? = null
 ) : ViewGroup(context, attributeSet) {
 
     enum class KeyType {
         TOP, MIDDLE, BOTTOM
+    }
+
+    enum class SpecialKeys(value: Int) {
+        ENTER(KeyEvent.KEYCODE_ENTER), DELETE(KeyEvent.KEYCODE_CLEAR)
     }
 
     private var keyWidth = 0.0f
@@ -24,9 +26,9 @@ class KeyBoardView @JvmOverloads constructor(
     private var secondRowConst = 0.0f
     private var thirdRowConst = 0.0f
 
-    private val topChars = listOf('Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P')
-    private val middleChars = listOf('A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L')
-    private val bottomChars = listOf('#', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '*')
+    private val topChars = listOf("Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P")
+    private val middleChars = listOf("A", "S", "D", "F", "G", "H", "J", "K", "L")
+    private val bottomChars = listOf("ENTER", "Z", "X", "C", "V", "B", "N", "M", "DEL")
 
     private val topKeys = mutableListOf<KeyView>()
     private val middleKeys = mutableListOf<KeyView>()
@@ -35,16 +37,17 @@ class KeyBoardView @JvmOverloads constructor(
     private val point = PointF(0f, 0f)
 
     init {
-        for (c in topChars) topKeys.add(KeyView(KeyType.TOP, c).apply { addView(this) })
-        for (c in middleChars) middleKeys.add(KeyView(KeyType.MIDDLE, c).apply { addView(this) })
-        for (c in bottomChars) bottomKeys.add(KeyView(KeyType.BOTTOM, c).apply { addView(this) })
+        for (c in topChars) topKeys.add(KeyView(c).apply { addView(this) })
+        for (c in middleChars) middleKeys.add(KeyView(c).apply { addView(this) })
+        for ((i, c) in bottomChars.withIndex()) {
+            bottomKeys.add(KeyView(c).apply { addView(this) })
+        }
     }
 
     private val keyColor = Color.rgb(211, 214, 219)
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = keyColor
     }
 
     private fun PointF.computeXYForKey(type: KeyType, position: Int) {
@@ -159,26 +162,76 @@ class KeyBoardView @JvmOverloads constructor(
         super.onDraw(canvas)
     }
 
-    inner class KeyView(type: KeyType, private val char: Char) : View(context) {
+    fun setOnKeyClickListener(listener: OnKeyClickListener) {
+        for (k in topKeys) k.clickListener = listener
+        for (k in middleKeys) k.clickListener = listener
+        for (k in bottomKeys) k.clickListener = listener
+    }
+
+    inner class KeyView(private val char: String) : View(context) {
+
+        private var gap = 0f
+        private var corner = 0f
+        private var textAccent = 0.0f
+
+        var clickListener: OnKeyClickListener? = null
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             setMeasuredDimension(keyWidth.roundToInt(), keyHeight.roundToInt())
         }
 
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            gap = keyWidth / 20
+            corner = keyWidth / 5
+            textAccent = (keyHeight * 0.5f) - ((paint.descent() + paint.ascent()) * 0.5f) + gap
+        }
+
         override fun onDraw(canvas: Canvas) {
-            if (char != bottomChars[0] && char != bottomChars[bottomChars.size - 1]) {
+            paint.color = keyColor
+            if (!isEnterKeyOrDelete()) {
                 canvas.drawRoundRect(
-                    keyWidth / 10, keyWidth / 10, (keyWidth - (keyWidth / 10)), (keyHeight) -
-                            (keyWidth / 10), (keyWidth / 10), keyWidth / 10, paint
+                    gap, gap, keyWidth - gap, keyHeight - gap, corner, corner, paint
                 )
             } else {
                 canvas.drawRoundRect(
-                    keyWidth / 10, keyWidth / 10, ((keyWidth + (keyWidth * 0.5f)) -
-                            (keyWidth / 10)),
-                    (keyHeight) -
-                            (keyWidth / 10), (keyWidth / 10), keyWidth / 10, paint
+                    gap, gap, ((keyWidth + (keyWidth / 2)) - gap), keyHeight - gap, corner, corner, paint
                 )
             }
+            paint.apply {
+                color = Color.BLACK
+                textSize = keyWidth / 3
+                textAlign = Paint.Align.CENTER
+                typeface = Typeface.DEFAULT_BOLD
+            }
+
+            if (!isEnterKeyOrDelete()) {
+                canvas.drawText(
+                    char, keyWidth * 0.5f, textAccent, paint
+                )
+            } else {
+                canvas.drawText(char, (keyWidth + secondRowConst) * 0.5f, textAccent, paint)
+            }
         }
+
+        override fun performClick(): Boolean {
+            super.performClick()
+            if (char != bottomChars[0] && char != bottomChars[bottomChars.size - 1])
+                clickListener?.onClick(char.toCharArray()[0])
+            else {
+                if (char == bottomChars[0]) clickListener?.onClick(SpecialKeys.ENTER)
+                else clickListener?.onClick(SpecialKeys.DELETE)
+            }
+            return true
+        }
+
+        private fun isEnterKeyOrDelete(): Boolean {
+            return char == "ENTER" || char == "DEL"
+        }
+    }
+
+    interface OnKeyClickListener {
+        fun onClick(char: Char)
+        fun onClick(key: SpecialKeys)
     }
 }
