@@ -162,7 +162,10 @@ class KeyBoardView @JvmOverloads constructor(
         super.onDraw(canvas)
     }
 
+    var keyClickListener: OnKeyClickListener? = null
+
     fun setOnKeyClickListener(listener: OnKeyClickListener) {
+        keyClickListener = listener
         for (k in topKeys) k.clickListener = listener
         for (k in middleKeys) k.clickListener = listener
         for (k in bottomKeys) k.clickListener = listener

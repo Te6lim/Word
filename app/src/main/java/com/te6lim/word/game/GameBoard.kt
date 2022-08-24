@@ -79,7 +79,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                                 ColorType.FRAME -> frameColor
                             }
                         }
-
                     })
                 )
             }
@@ -129,6 +128,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 ((i + 1) * cellWidth).roundToInt()
             )
         }
+    }
+
+    fun reRenderText(string: String?, row: Int) {
+        squareGroups[row].reRenderText = string
     }
 
     private class Square(
@@ -216,6 +219,18 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         private val point = PointF(0f, 0f)
 
         private val squares = arrayListOf<Square>()
+
+        var reRenderText: String? = null
+            set(value) {
+                field = value
+                var i = 0
+                value?.let {
+                    for (s in squares) {
+                        s.letter = if (i < value.length) value[i++] else s.letter
+                    }
+                }
+                invalidate()
+            }
 
         fun addToSquareGroup(square: Square) {
             squares.add(square)
