@@ -13,6 +13,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private val attributeArray = context.theme
         .obtainStyledAttributes(attributeSet, R.styleable.GameBoard, 0, 0)
 
+    enum class ColorType {
+        CORRECT, MISPLACED, WRONG, FRAME
+    }
+
     private var cellWidth = 0.0f
 
 
@@ -24,29 +28,15 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var correctColor = Color.rgb(107, 170, 100)
     private var misplacedColor = Color.rgb(201, 180, 87)
     private var wrongColor = Color.rgb(120, 124, 127)
-    private var textColorWhite = Color.rgb(255, 255, 255)
-    private var textColorBlack = Color.rgb(0, 0, 0)
 
     private var frameColor = Color.rgb(206, 206, 206)
 
-    private val density = resources.displayMetrics.density
-
-    private val stroke = density * 2
-
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = frameColor
-        style = Paint.Style.STROKE
-        strokeWidth = stroke
-        isAntiAlias = true
-    }
-
     var guesses = listOf<WordGame.GuessInfo>()
         set(value) {
-            if (value.isNotEmpty() && value.size != field.size) {
+            if (value.isNotEmpty()) {
                 field = value
                 removeAllViews()
                 generateLetters()
-                invalidate()
             }
         }
 
@@ -62,13 +52,36 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         var letter: Char
         for (i in 0 until attrRow) {
             squares.add(arrayListOf())
-            squareGroups.add(SquareGroup())
+            squareGroups.add(SquareGroup(context, attrCol, object : MotherBoardInterface {
+                override fun squareWidth() = cellWidth
+            }))
             for (j in 0 until attrCol) {
                 letter = if (i < guesses.size) {
                     if (j < guesses[i].characterArray.size) guesses[i].characterArray[j]
                     else '\u0000'
                 } else '\u0000'
-                squareGroups[i].addToSquareGroup(Square(context, i, j, letter.uppercaseChar()))
+                squareGroups[i].addToSquareGroup(
+                    Square(context, i, letter.uppercaseChar(), object : MotherBoardInterface {
+                        override fun getInfo(row: Int): WordGame.GuessInfo? {
+                            if (row < guesses.size) return guesses[row]
+                            return null
+                        }
+
+                        override fun squareWidth(): Float {
+                            return cellWidth
+                        }
+
+                        override fun getColor(type: ColorType): Int {
+                            return when (type) {
+                                ColorType.CORRECT -> correctColor
+                                ColorType.MISPLACED -> misplacedColor
+                                ColorType.WRONG -> wrongColor
+                                ColorType.FRAME -> frameColor
+                            }
+                        }
+
+                    })
+                )
             }
             addView(squareGroups[i])
         }
@@ -118,8 +131,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
     }
 
-    inner class Square(
-        context: Context, private val row: Int, private val col: Int, char: Char = '\u0000'
+    private class Square(
+        context: Context, private val row: Int, char: Char = '\u0000',
+        private val listener: MotherBoardInterface
     ) : View(context) {
 
         var letter: Char = char
@@ -128,53 +142,57 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 invalidate()
             }
 
+        private val point = PointF(0f, 0f)
+
+        private var textColorWhite = Color.rgb(255, 255, 255)
+        private var textColorBlack = Color.rgb(0, 0, 0)
+
+        private val density = resources.displayMetrics.density
+
+        private val stroke = density * 2
+
+        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = listener.getColor(ColorType.FRAME)
+            style = Paint.Style.STROKE
+            strokeWidth = stroke
+            isAntiAlias = true
+        }
+
 
         private fun PointF.calculateTextPosition() {
-            y = (cellWidth * 0.65f)
-            x = (cellWidth * 0.5f)
+            y = (listener.squareWidth() * 0.65f)
+            x = (listener.squareWidth() * 0.5f)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension((cellWidth).roundToInt(), (cellWidth).roundToInt())
-        }
-
-        private fun PointF.calculateCoordinate() {
-            x = if (col == 0) 0f else col * cellWidth
-            y = 0f
-        }
-
-        private fun right(): Float {
-            return (col + 1) * cellWidth
-        }
-
-        private fun bottom(): Float {
-            return cellWidth
+            setMeasuredDimension((listener.squareWidth()).roundToInt(), (listener.squareWidth()).roundToInt())
         }
 
         override fun onDraw(canvas: Canvas) {
             paint.apply {
                 style = Paint.Style.STROKE
                 paint.style = Paint.Style.STROKE
-                paint.color = wrongColor
             }
 
-            if (row < guesses.size && guesses[row].isMisplaced(letter)) {
+            val cellWidth = listener.squareWidth()
+
+            if (listener.getInfo(row)?.isMisplaced(letter) == true) {
                 paint.style = Paint.Style.FILL
-                paint.color = misplacedColor
+                paint.color = listener.getColor(ColorType.MISPLACED)
                 canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
             } else {
-                if (row < guesses.size && guesses[row].isRight(letter)) {
+                if (listener.getInfo(row)?.isRight(letter) == true) {
                     paint.style = Paint.Style.FILL
-                    paint.color = correctColor
+                    paint.color = listener.getColor(ColorType.CORRECT)
                     canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
                 } else {
-                    if (row < guesses.size && guesses[row].isWrong(letter)) {
+                    if (listener.getInfo(row)?.isWrong(letter) == true) {
                         paint.style = Paint.Style.FILL
-                        paint.color = wrongColor
+                        paint.color = listener.getColor(ColorType.WRONG)
                         canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
                     } else {
                         paint.style = Paint.Style.STROKE
-                        paint.color = frameColor
+                        paint.color = listener.getColor(ColorType.FRAME)
                         canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
                     }
                 }
@@ -191,7 +209,11 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
     }
 
-    inner class SquareGroup() : ViewGroup(context) {
+    private class SquareGroup(
+        context: Context, private val columnSize: Int, private val listener: MotherBoardInterface
+    ) : ViewGroup(context) {
+
+        private val point = PointF(0f, 0f)
 
         private val squares = arrayListOf<Square>()
 
@@ -201,20 +223,20 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         private fun PointF.calculateCoordinate(col: Int) {
-            x = if (col == 0) 0f else col * cellWidth
+            x = if (col == 0) 0f else col * listener.squareWidth()
             y = 0f
         }
 
         private fun right(col: Int): Float {
-            return (col + 1) * cellWidth
+            return (col + 1) * listener.squareWidth()
         }
 
         private fun bottom(): Float {
-            return cellWidth
+            return listener.squareWidth()
         }
 
         override fun onDraw(canvas: Canvas) {
-
+            super.onDraw(canvas)
         }
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -227,12 +249,25 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension((cellWidth * attrCol).toInt(), cellWidth.toInt())
+            setMeasuredDimension(
+                (listener.squareWidth() * columnSize).toInt(), listener.squareWidth().toInt()
+            )
 
         }
+    }
 
-        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-            super.onSizeChanged(w, h, oldw, oldh)
+    interface MotherBoardInterface {
+
+        fun getInfo(row: Int): WordGame.GuessInfo? {
+            return null
+        }
+
+        fun squareWidth(): Float {
+            return 0.0f
+        }
+
+        fun getColor(type: ColorType): Int {
+            return Color.rgb(0, 0, 0)
         }
     }
 }
