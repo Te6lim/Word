@@ -74,22 +74,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
     }
 
-    private fun PointF.calculateCoordinate(r: Int, c: Int) {
-        y = if (r == 0) 0f else (r * cellWidth)
-        x = if (c == 0) 0f else (c * cellWidth)
-    }
-
     private fun PointF.calculateCoordinate(r: Int) {
         x = 0f
         y = if (r == 0) 0f else (r) * cellWidth
-    }
-
-    private fun right(pos: Int): Float {
-        return ((pos * cellWidth) + cellWidth)
-    }
-
-    private fun bottom(pos: Int): Float {
-        return ((pos * cellWidth) + cellWidth)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -122,12 +109,11 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-
         for ((i, s) in squareGroups.withIndex()) {
             point.calculateCoordinate(i)
             s.layout(
-                point.x.toInt(), point.y.toInt(), (attrCol * cellWidth).toInt(), ((i + 1) * cellWidth)
-                    .toInt()
+                point.x.toInt(), point.y.roundToInt(), (attrCol * cellWidth).roundToInt(),
+                ((i + 1) * cellWidth).roundToInt()
             )
         }
     }
@@ -152,8 +138,20 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             setMeasuredDimension((cellWidth).roundToInt(), (cellWidth).roundToInt())
         }
 
+        private fun PointF.calculateCoordinate() {
+            x = if (col == 0) 0f else col * cellWidth
+            y = 0f
+        }
+
+        private fun right(): Float {
+            return (col + 1) * cellWidth
+        }
+
+        private fun bottom(): Float {
+            return cellWidth
+        }
+
         override fun onDraw(canvas: Canvas) {
-            point.calculateCoordinate(row, col)
             paint.apply {
                 style = Paint.Style.STROKE
                 paint.style = Paint.Style.STROKE
@@ -202,12 +200,30 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             addView(square)
         }
 
+        private fun PointF.calculateCoordinate(col: Int) {
+            x = if (col == 0) 0f else col * cellWidth
+            y = 0f
+        }
+
+        private fun right(col: Int): Float {
+            return (col + 1) * cellWidth
+        }
+
+        private fun bottom(): Float {
+            return cellWidth
+        }
+
         override fun onDraw(canvas: Canvas) {
 
         }
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-
+            for ((i, s) in squares.withIndex()) {
+                point.calculateCoordinate(i)
+                s.layout(
+                    point.x.roundToInt(), point.y.roundToInt(), right(i).roundToInt(), bottom().roundToInt()
+                )
+            }
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
