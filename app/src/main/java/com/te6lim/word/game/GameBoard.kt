@@ -24,7 +24,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var correctColor = Color.rgb(107, 170, 100)
     private var misplacedColor = Color.rgb(201, 180, 87)
     private var wrongColor = Color.rgb(120, 124, 127)
-    private var textColor = Color.rgb(255, 255, 255)
+    private var textColorWhite = Color.rgb(255, 255, 255)
+    private var textColorBlack = Color.rgb(0, 0, 0)
 
     private var frameColor = Color.rgb(206, 206, 206)
 
@@ -41,13 +42,16 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     var guesses = listOf<WordGame.GuessInfo>()
         set(value) {
-            field = value
-            removeAllViews()
-            generateLetters()
-            invalidate()
+            if (value.isNotEmpty() && value.size != field.size) {
+                field = value
+                removeAllViews()
+                generateLetters()
+                invalidate()
+            }
         }
 
     private var squares = arrayListOf<ArrayList<Square>>()
+    private var squareGroups = arrayListOf<SquareGroup>()
 
     init {
         generateLetters()
@@ -58,12 +62,15 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         var letter: Char
         for (i in 0 until attrRow) {
             squares.add(arrayListOf())
+            squareGroups.add(SquareGroup())
             for (j in 0 until attrCol) {
-                letter = if (i < guesses.size) guesses[i].characterArray[j]
-                else '\u0000'
-                squares[i].add(Square(context, i, j, letter.uppercaseChar()))
-                addView(squares[i][j])
+                letter = if (i < guesses.size) {
+                    if (j < guesses[i].characterArray.size) guesses[i].characterArray[j]
+                    else '\u0000'
+                } else '\u0000'
+                squareGroups[i].addToSquareGroup(Square(context, i, j, letter.uppercaseChar()))
             }
+            addView(squareGroups[i])
         }
     }
 
@@ -72,16 +79,17 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         x = if (c == 0) 0f else (c * cellWidth)
     }
 
+    private fun PointF.calculateCoordinate(r: Int) {
+        x = 0f
+        y = if (r == 0) 0f else (r) * cellWidth
+    }
+
     private fun right(pos: Int): Float {
         return ((pos * cellWidth) + cellWidth)
     }
 
     private fun bottom(pos: Int): Float {
         return ((pos * cellWidth) + cellWidth)
-    }
-
-    private fun drawSquare(row: Int, col: Int, canvas: Canvas) {
-        squares[row][col].draw(canvas)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -111,23 +119,29 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        for (i in 0 until attrRow) {
-            //for (j in 0 until col) drawSquare(i, j, canvas = canvas)
-        }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        for (i in 0 until attrRow) {
-            for (j in 0 until attrCol) {
-                point.calculateCoordinate(i, j)
-                squares[i][j].layout(point.x.toInt(), point.y.toInt(), right(j).toInt(), bottom(i).toInt())
-            }
+
+        for ((i, s) in squareGroups.withIndex()) {
+            point.calculateCoordinate(i)
+            s.layout(
+                point.x.toInt(), point.y.toInt(), (attrCol * cellWidth).toInt(), ((i + 1) * cellWidth)
+                    .toInt()
+            )
         }
     }
 
     inner class Square(
-        context: Context, private val row: Int, private val col: Int, private val letter: Char = '\u0000'
+        context: Context, private val row: Int, private val col: Int, char: Char = '\u0000'
     ) : View(context) {
+
+        var letter: Char = char
+            set(value) {
+                field = value
+                invalidate()
+            }
+
 
         private fun PointF.calculateTextPosition() {
             y = (cellWidth * 0.65f)
@@ -169,13 +183,40 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             }
             point.calculateTextPosition()
             paint.apply {
-                color = textColor
+                color = textColorBlack
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
                 textSize = cellWidth / 2f
                 typeface = Typeface.create("", Typeface.BOLD)
             }
             canvas.drawText(letter.toString(), point.x, point.y, paint)
+        }
+    }
+
+    inner class SquareGroup() : ViewGroup(context) {
+
+        private val squares = arrayListOf<Square>()
+
+        fun addToSquareGroup(square: Square) {
+            squares.add(square)
+            addView(square)
+        }
+
+        override fun onDraw(canvas: Canvas) {
+
+        }
+
+        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            setMeasuredDimension((cellWidth * attrCol).toInt(), cellWidth.toInt())
+
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
         }
     }
 }

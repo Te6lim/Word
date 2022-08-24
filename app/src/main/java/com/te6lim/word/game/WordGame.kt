@@ -6,6 +6,8 @@ class WordGame(wordRepository: WordRepository? = null) {
 
     companion object {
         private const val MAX_TRIAL = 6
+        var WORD_LENGTH = 5
+            private set
     }
 
     private var t = 0
@@ -15,31 +17,21 @@ class WordGame(wordRepository: WordRepository? = null) {
             field = value.uppercase()
         }
 
-    private var guessWord = StringBuilder(5)
+    private var guessWord = StringBuilder()
 
     private var guesses: List<GuessInfo> = mutableListOf()
-        private set
 
     fun addLetter(letter: Char) {
         if (guessWord.length < guessWord.capacity()) guessWord.append(letter)
     }
 
-    fun removeLetter(char: Int) {
-        guessWord.deleteCharAt(guessWord.length - 1)
-    }
-
     fun getAllGuesses(): List<GuessInfo> {
-        verifyWord(guessWord.toString())
-        if (t < MAX_TRIAL) {
+        if (t < MAX_TRIAL && guessWord.isNotEmpty()) {
             val guessInfo = GuessInfo(guessWord.toString())
             guesses = guesses.toMutableList().apply { add(guessInfo.apply { trial = ++t }) }
-            return guesses
+            guessWord = StringBuilder()
         }
-        return listOf()
-    }
-
-    private fun verifyWord(w: String) {
-        if (w.length > word.length) throw IllegalArgumentException()
+        return guesses
     }
 
     inner class GuessInfo(guess: String) {
@@ -94,7 +86,7 @@ class WordGame(wordRepository: WordRepository? = null) {
         }
 
         fun isRight(char: Char): Boolean {
-            return !this.isMisplaced(char.uppercaseChar()) && !this.isWrong(char.uppercaseChar())
+            return !this.isMisplaced(char.uppercaseChar()) && !this.isWrong(char.uppercaseChar()) && trial > 0
         }
 
         fun copy(): GuessInfo {

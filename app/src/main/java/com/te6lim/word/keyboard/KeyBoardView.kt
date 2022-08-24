@@ -120,8 +120,8 @@ class KeyBoardView @JvmOverloads constructor(
         for (i in 1 until bottomKeys.size - 1) {
             point.computeXYForKey(KeyType.BOTTOM, i - 1)
             bottomKeys[i].layout(
-                point.x.toInt(), point.y.toInt(), right(KeyType.BOTTOM, i - 1).toInt(), bottom(KeyType.BOTTOM)
-                    .toInt()
+                point.x.toInt(), point.y.toInt(), right(KeyType.BOTTOM, i - 1).toInt(),
+                bottom(KeyType.BOTTOM).toInt()
             )
         }
         point.apply {
@@ -176,6 +176,10 @@ class KeyBoardView @JvmOverloads constructor(
 
         var clickListener: OnKeyClickListener? = null
 
+        init {
+            isClickable = true
+        }
+
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             setMeasuredDimension(keyWidth.roundToInt(), keyHeight.roundToInt())
         }
@@ -216,6 +220,7 @@ class KeyBoardView @JvmOverloads constructor(
 
         override fun performClick(): Boolean {
             super.performClick()
+            contentDescription = "jksdf"
             if (char != bottomChars[0] && char != bottomChars[bottomChars.size - 1])
                 clickListener?.onClick(char.toCharArray()[0])
             else {

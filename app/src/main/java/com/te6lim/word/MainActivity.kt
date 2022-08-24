@@ -20,13 +20,16 @@ class MainActivity : AppCompatActivity() {
         keyBoard.setOnKeyClickListener(object : KeyBoardView.OnKeyClickListener {
 
             override fun onClick(char: Char) {
-
+                game.addLetter(char)
             }
 
             override fun onClick(key: KeyBoardView.SpecialKeys) {
                 when (key) {
-                    KeyBoardView.SpecialKeys.ENTER -> {}
-                    KeyBoardView.SpecialKeys.DELETE -> {}
+                    KeyBoardView.SpecialKeys.ENTER -> {
+                        //gameBoard.guesses = game.getAllGuesses()
+                    }
+                    KeyBoardView.SpecialKeys.DELETE -> {
+                    }
                 }
             }
         })
