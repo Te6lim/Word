@@ -1,6 +1,6 @@
 package com.te6lim.wordgame
 
-class WordGame(repository: WordRepository? = null) {
+class WordGame(private val repository: WordRepository? = null) {
 
     companion object {
         private const val MAX_TRIAL = 6
@@ -37,24 +37,27 @@ class WordGame(repository: WordRepository? = null) {
     }
 
     open inner class GuessInfo(guess: String) {
-        internal var characterArray: List<Char> = arrayListOf()
-            private set
 
         private var misplacedCharacters = listOf<Char>()
 
         private var wrongCharacters = listOf<Char>()
 
-        private val guessWord = guess.uppercase()
+        internal val guessWord = guess.uppercase()
+
+        internal var unUsedCharacters = arrayListOf<Char>()
 
         init {
             if (guess.isNotEmpty()) {
                 misplacedCharacters = misplacedCharacters()
                 wrongCharacters = wrongCharacters()
 
-                val array = arrayListOf<Char>()
-                for (c in guess) array.add(c)
-                characterArray = array
+                for (c in word) unUsedCharacters.add(c)
             }
+        }
+
+        fun resetUnUsedCharacters() {
+            unUsedCharacters = arrayListOf()
+            for (c in word) unUsedCharacters.add(c)
         }
 
         private fun misplacedCharacters(): List<Char> {

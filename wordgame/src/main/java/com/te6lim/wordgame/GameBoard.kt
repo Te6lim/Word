@@ -42,13 +42,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 field = value
                 removeAllViews()
                 generateLetters()
+                invalidate()
             }
         }
 
     private var squares = arrayListOf<ArrayList<Square>>()
     private var squareGroups = arrayListOf<SquareGroup>()
-
-    private var unUsedCharacters = arrayListOf<Char>()
 
     init {
         generateLetters()
@@ -59,12 +58,13 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         var letter: Char
         for (i in 0 until attrRow) {
             squares.add(arrayListOf())
+            if (i < guesses.size) guesses[i].resetUnUsedCharacters()
             squareGroups.add(SquareGroup(context, attrCol, object : MotherBoardInterface {
                 override fun squareWidth() = cellWidth
             }))
             for (j in 0 until attrCol) {
                 letter = if (i < guesses.size) {
-                    if (j < guesses[i].characterArray.size) guesses[i].characterArray[j] else '\u0000'
+                    if (j < guesses[i].guessWord.length) guesses[i].guessWord[j] else '\u0000'
                 } else '\u0000'
                 squareGroups[i].addToSquareGroup(
                     Square(context, i, letter.uppercaseChar(), object : MotherBoardInterface {
@@ -200,35 +200,60 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 paint.style = Paint.Style.STROKE
             }
 
-            val cellWidth = listener.squareWidth()
-
             if (listener.getInfo(row)?.isMisplaced(letter) == true) {
                 paint.style = Paint.Style.FILL
-                paint.color = listener.getColor(ColorType.MISPLACED)
-                canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                paint.color = if (listener.getInfo(row)?.unUsedCharacters?.contains(letter) == true)
+                    listener.getColor(ColorType.MISPLACED) else listener.getColor(ColorType.WRONG)
+                canvas.drawRect(
+                    stroke,
+                    stroke,
+                    listener.squareWidth() - stroke,
+                    listener.squareWidth() - stroke,
+                    paint
+                )
             } else {
                 if (listener.getInfo(row)?.isRight(letter) == true) {
                     paint.style = Paint.Style.FILL
-                    paint.color = listener.getColor(ColorType.CORRECT)
-                    canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                    paint.color = if (listener.getInfo(row)?.unUsedCharacters?.contains(letter) == true)
+                        listener.getColor(ColorType.CORRECT) else listener.getColor(ColorType.WRONG)
+                    canvas.drawRect(
+                        stroke,
+                        stroke,
+                        listener.squareWidth() - stroke,
+                        listener.squareWidth() - stroke,
+                        paint
+                    )
                 } else {
                     if (listener.getInfo(row)?.isWrong(letter) == true) {
                         paint.style = Paint.Style.FILL
                         paint.color = listener.getColor(ColorType.WRONG)
-                        canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                        canvas.drawRect(
+                            stroke,
+                            stroke,
+                            listener.squareWidth() - stroke,
+                            listener.squareWidth() - stroke,
+                            paint
+                        )
                     } else {
                         paint.style = Paint.Style.STROKE
                         paint.color = listener.getColor(ColorType.FRAME)
-                        canvas.drawRect(stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint)
+                        canvas.drawRect(
+                            stroke,
+                            stroke,
+                            listener.squareWidth() - stroke,
+                            listener.squareWidth() - stroke,
+                            paint
+                        )
                     }
                 }
             }
+            listener.getInfo(row)?.unUsedCharacters?.remove(letter)
             point.calculateTextPosition()
             paint.apply {
                 color = if (listener.submittedStatus()) textColorWhite else textColorBlack
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
-                textSize = cellWidth / 2f
+                textSize = listener.squareWidth() / 2f
                 typeface = Typeface.create("", Typeface.BOLD)
             }
             canvas.drawText(letter.toString(), point.x, point.y, paint)
