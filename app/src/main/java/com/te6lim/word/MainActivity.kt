@@ -21,14 +21,17 @@ class MainActivity : AppCompatActivity() {
 
             override fun onClick(char: Char) {
                 game.addLetter(char)
+                gameBoard.showCharacter(char)
             }
 
             override fun onClick(key: KeyBoardView.SpecialKeys) {
                 when (key) {
                     KeyBoardView.SpecialKeys.ENTER -> {
-                        //gameBoard.guesses = game.getAllGuesses()
+                        gameBoard.guesses = game.getAllGuesses()
                     }
                     KeyBoardView.SpecialKeys.DELETE -> {
+                        game.removeLastLetter()
+                        gameBoard.clearLastCharacter()
                     }
                 }
             }

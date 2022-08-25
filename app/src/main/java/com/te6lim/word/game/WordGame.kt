@@ -22,7 +22,11 @@ class WordGame(wordRepository: WordRepository? = null) {
     private var guesses: List<GuessInfo> = mutableListOf()
 
     fun addLetter(letter: Char) {
-        if (guessWord.length < guessWord.capacity()) guessWord.append(letter)
+        if (guessWord.length < WORD_LENGTH) guessWord.append(letter)
+    }
+
+    fun removeLastLetter() {
+        if (guessWord.isNotEmpty()) guessWord.deleteCharAt(guessWord.lastIndex)
     }
 
     fun getAllGuesses(): List<GuessInfo> {

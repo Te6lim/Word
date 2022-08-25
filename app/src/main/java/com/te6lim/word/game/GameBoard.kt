@@ -31,9 +31,15 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var frameColor = Color.rgb(206, 206, 206)
 
+    private var charPosition = 0
+
+    private var submitted = false
+
     var guesses = listOf<WordGame.GuessInfo>()
         set(value) {
-            if (value.isNotEmpty()) {
+            if (value.isNotEmpty() && value.size > field.size) {
+                charPosition = 0
+                submitted = true
                 field = value
                 removeAllViews()
                 generateLetters()
@@ -78,6 +84,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                                 ColorType.WRONG -> wrongColor
                                 ColorType.FRAME -> frameColor
                             }
+                        }
+
+                        override fun submittedStatus(): Boolean {
+                            return submitted
                         }
                     })
                 )
@@ -132,6 +142,19 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     fun reRenderText(string: String?, row: Int) {
         squareGroups[row].reRenderText = string
+    }
+
+    fun showCharacter(char: Char) {
+        submitted = false
+        if (guesses.size < 6 && charPosition < 5) {
+            squareGroups[guesses.size].squares[charPosition++].letter = char
+        }
+    }
+
+    fun clearLastCharacter() {
+        if (guesses.size < 6 && charPosition > 0) {
+            squareGroups[guesses.size].squares[--charPosition].letter = '\u0000'
+        }
     }
 
     private class Square(
@@ -202,7 +225,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             }
             point.calculateTextPosition()
             paint.apply {
-                color = textColorBlack
+                color = if (listener.submittedStatus()) textColorWhite else textColorBlack
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
                 textSize = cellWidth / 2f
@@ -218,7 +241,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         private val point = PointF(0f, 0f)
 
-        private val squares = arrayListOf<Square>()
+        val squares = arrayListOf<Square>()
 
         var reRenderText: String? = null
             set(value) {
@@ -283,6 +306,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         fun getColor(type: ColorType): Int {
             return Color.rgb(0, 0, 0)
+        }
+
+        fun submittedStatus(): Boolean {
+            return false
         }
     }
 }
