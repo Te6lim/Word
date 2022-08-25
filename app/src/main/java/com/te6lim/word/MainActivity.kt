@@ -2,7 +2,7 @@ package com.te6lim.word
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.te6lim.word.keyboard.KeyBoardView
+import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.wordgame.GameBoard
 import com.te6lim.wordgame.WordGame
 

@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:row="6" />
 
-    <com.te6lim.word.keyboard.KeyBoardView
+    <com.te6lim.keyboard.KeyBoardView
         android:id="@+id/gameKeyboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

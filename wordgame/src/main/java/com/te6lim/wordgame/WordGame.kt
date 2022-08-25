@@ -1,6 +1,6 @@
 package com.te6lim.wordgame
 
-class WordGame() {
+class WordGame(repository: WordRepository? = null) {
 
     companion object {
         private const val MAX_TRIAL = 6

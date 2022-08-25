@@ -1,4 +1,4 @@
-package com.te6lim.word.keyboard
+package com.te6lim.keyboard
 
 import android.content.Context
 import android.graphics.*
