@@ -1,11 +1,10 @@
-package com.te6lim.word.game
+package com.te6lim.wordgame
 
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
-import com.te6lim.word.R
 import kotlin.math.roundToInt
 
 class GameBoard @JvmOverloads
@@ -49,6 +48,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var squares = arrayListOf<ArrayList<Square>>()
     private var squareGroups = arrayListOf<SquareGroup>()
 
+    private var unUsedCharacters = arrayListOf<Char>()
+
     init {
         generateLetters()
     }
@@ -63,8 +64,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             }))
             for (j in 0 until attrCol) {
                 letter = if (i < guesses.size) {
-                    if (j < guesses[i].characterArray.size) guesses[i].characterArray[j]
-                    else '\u0000'
+                    if (j < guesses[i].characterArray.size) guesses[i].characterArray[j] else '\u0000'
                 } else '\u0000'
                 squareGroups[i].addToSquareGroup(
                     Square(context, i, letter.uppercaseChar(), object : MotherBoardInterface {
@@ -242,6 +242,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         private val point = PointF(0f, 0f)
 
         val squares = arrayListOf<Square>()
+
+        private val wordArray = arrayListOf<Char>()
 
         var reRenderText: String? = null
             set(value) {

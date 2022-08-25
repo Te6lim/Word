@@ -7,7 +7,7 @@
     android:layout_gravity="center"
     tools:context=".MainActivity">
 
-    <com.te6lim.word.game.GameBoard
+    <com.te6lim.wordgame.GameBoard
         android:id="@+id/gameBoard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

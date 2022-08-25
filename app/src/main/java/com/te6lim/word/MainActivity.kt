@@ -2,9 +2,9 @@ package com.te6lim.word
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.te6lim.word.game.GameBoard
-import com.te6lim.word.game.WordGame
 import com.te6lim.word.keyboard.KeyBoardView
+import com.te6lim.wordgame.GameBoard
+import com.te6lim.wordgame.WordGame
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
                     KeyBoardView.SpecialKeys.ENTER -> {
                         gameBoard.guesses = game.getAllGuesses()
                     }
+
                     KeyBoardView.SpecialKeys.DELETE -> {
                         game.removeLastLetter()
                         gameBoard.clearLastCharacter()
@@ -37,6 +38,5 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        gameBoard.guesses = game.getAllGuesses()
     }
 }
