@@ -1,9 +1,11 @@
 package com.te6lim.keyboard
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -38,15 +40,14 @@ class KeyBoardView @JvmOverloads constructor(
 
     private val point = PointF(0f, 0f)
 
+    private val keyColor = Color.rgb(211, 214, 219)
+    private val clickColor = Color.rgb(120, 124, 127)
+
     init {
         for (c in topChars) topKeys.add(KeyView(c).apply { addView(this) })
         for (c in middleChars) middleKeys.add(KeyView(c).apply { addView(this) })
-        for ((i, c) in bottomChars.withIndex()) {
-            bottomKeys.add(KeyView(c).apply { addView(this) })
-        }
+        for (c in bottomChars) bottomKeys.add(KeyView(c).apply { addView(this) })
     }
-
-    private val keyColor = Color.rgb(211, 214, 219)
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -164,7 +165,15 @@ class KeyBoardView @JvmOverloads constructor(
         super.onDraw(canvas)
     }
 
-    var keyClickListener: OnKeyClickListener? = null
+    private var keyClickListener: OnKeyClickListener? = null
+
+    private val prevKeyListener = object : KeyCommunicator {
+        override fun getPrevious(): KeyView? {
+            return previousKey
+        }
+
+    }
+    var previousKey: KeyView? = null
 
     fun setOnKeyClickListener(listener: OnKeyClickListener) {
         keyClickListener = listener
@@ -180,6 +189,8 @@ class KeyBoardView @JvmOverloads constructor(
         private var textAccent = 0.0f
 
         var clickListener: OnKeyClickListener? = null
+
+        private var keyColorValue = keyColor
 
         init {
             isClickable = true
@@ -197,7 +208,8 @@ class KeyBoardView @JvmOverloads constructor(
         }
 
         override fun onDraw(canvas: Canvas) {
-            paint.color = keyColor
+            //keyColorValue = keyColor
+            paint.color = keyColorValue
             if (!isEnterKeyOrDelete()) {
                 canvas.drawRoundRect(
                     gap, gap, keyWidth - gap, keyHeight - gap, corner, corner, paint
@@ -230,7 +242,7 @@ class KeyBoardView @JvmOverloads constructor(
 
         override fun performClick(): Boolean {
             super.performClick()
-            contentDescription = "jksdf"
+            contentDescription = char
             if (char != bottomChars[0] && char != bottomChars[bottomChars.size - 1])
                 clickListener?.onClick(char.toCharArray()[0])
             else {
@@ -238,6 +250,35 @@ class KeyBoardView @JvmOverloads constructor(
                 else clickListener?.onClick(SpecialKeys.DELETE)
             }
             return true
+        }
+
+        private val animator = ValueAnimator.ofArgb(keyColor, clickColor).apply {
+            duration = 125
+            addUpdateListener {
+                keyColorValue = it.animatedValue as Int
+                invalidate()
+            }
+        }
+
+        override fun onTouchEvent(event: MotionEvent?): Boolean {
+            event?.let {
+                return when (it.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        animator.start()
+                        true
+                    }
+
+                    MotionEvent.ACTION_UP -> {
+                        animator.reverse()
+                        performClick()
+                        true
+                    }
+                    else -> {
+                        super.onTouchEvent(event)
+                    }
+                }
+            }
+            return super.onTouchEvent(event)
         }
 
         private fun isEnterKeyOrDelete(): Boolean {
@@ -252,5 +293,9 @@ class KeyBoardView @JvmOverloads constructor(
     interface OnKeyClickListener {
         fun onClick(char: Char)
         fun onClick(key: SpecialKeys)
+    }
+
+    interface KeyCommunicator {
+        fun getPrevious(): KeyView?
     }
 }
