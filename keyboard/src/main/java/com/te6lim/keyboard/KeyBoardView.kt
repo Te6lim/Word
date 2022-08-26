@@ -4,7 +4,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -20,8 +19,8 @@ class KeyBoardView @JvmOverloads constructor(
         TOP, MIDDLE, BOTTOM
     }
 
-    enum class SpecialKeys(value: Int) {
-        ENTER(KeyEvent.KEYCODE_ENTER), DELETE(KeyEvent.KEYCODE_CLEAR)
+    enum class SpecialKeys() {
+        ENTER, DELETE
     }
 
     private var keyWidth = 0.0f
@@ -127,21 +126,22 @@ class KeyBoardView @JvmOverloads constructor(
                 bottom(KeyType.BOTTOM).toInt()
             )
         }
+
         point.apply {
             x = 0f
             y = 2 * keyHeight
-            bottomKeys[0].layout(
-                point.x.toInt(), point.y.toInt(), (keyWidth + secondRowConst).toInt(), (3 * keyHeight).toInt()
-            )
         }
+        bottomKeys[0].layout(
+            point.x.toInt(), point.y.toInt(), (keyWidth + secondRowConst).toInt(), (3 * keyHeight).toInt()
+        )
 
         point.apply {
             x = thirdRowConst + ((bottomKeys.size - 2) * keyWidth)
             y = 2 * keyHeight
-            bottomKeys[bottomKeys.size - 1].layout(
-                point.x.toInt(), point.y.toInt(), (x + (thirdRowConst)).toInt(), (3 * keyHeight).toInt()
-            )
         }
+        bottomKeys[bottomKeys.size - 1].layout(
+            point.x.toInt(), point.y.toInt(), (point.x + (thirdRowConst)).toInt(), (3 * keyHeight).toInt()
+        )
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -167,14 +167,6 @@ class KeyBoardView @JvmOverloads constructor(
 
     private var keyClickListener: OnKeyClickListener? = null
 
-    private val prevKeyListener = object : KeyCommunicator {
-        override fun getPrevious(): KeyView? {
-            return previousKey
-        }
-
-    }
-    var previousKey: KeyView? = null
-
     fun setOnKeyClickListener(listener: OnKeyClickListener) {
         keyClickListener = listener
         for (k in topKeys) k.clickListener = listener
@@ -188,9 +180,11 @@ class KeyBoardView @JvmOverloads constructor(
         private var corner = 0f
         private var textAccent = 0.0f
 
-        var clickListener: OnKeyClickListener? = null
+        internal var clickListener: OnKeyClickListener? = null
 
         private var keyColorValue = keyColor
+
+        private var topValueForLargeRect = 0f
 
         init {
             isClickable = true
@@ -205,10 +199,10 @@ class KeyBoardView @JvmOverloads constructor(
             gap = keyWidth / 20
             corner = keyWidth / 5
             textAccent = (keyHeight * 0.5f) - ((paint.descent() + paint.ascent()) * 0.5f) + gap
+            topValueForLargeRect = ((keyWidth + (keyWidth / 2)) - gap)
         }
 
         override fun onDraw(canvas: Canvas) {
-            //keyColorValue = keyColor
             paint.color = keyColorValue
             if (!isEnterKeyOrDelete()) {
                 canvas.drawRoundRect(
@@ -216,7 +210,7 @@ class KeyBoardView @JvmOverloads constructor(
                 )
             } else {
                 canvas.drawRoundRect(
-                    gap, gap, ((keyWidth + (keyWidth / 2)) - gap), keyHeight - gap, corner, corner, paint
+                    gap, gap, topValueForLargeRect, keyHeight - gap, corner, corner, paint
                 )
             }
             paint.apply {
@@ -233,8 +227,8 @@ class KeyBoardView @JvmOverloads constructor(
             } else {
                 val pic = ContextCompat.getDrawable(context, R.drawable.ic_backspace)!!.toBitmap()
                 if (isDeleteKey()) canvas.drawBitmap(
-                    pic, (thirdRowConst - pic.width) / 2f,
-                    ((thirdRowConst - pic.height) / 2f) + gap, paint
+                    pic, (thirdRowConst - pic.width) * 0.5f,
+                    ((thirdRowConst - pic.height) * 0.5f) + gap, paint
                 )
                 else canvas.drawText(char, (keyWidth + secondRowConst) * 0.5f, textAccent, paint)
             }
@@ -253,7 +247,7 @@ class KeyBoardView @JvmOverloads constructor(
         }
 
         private val animator = ValueAnimator.ofArgb(keyColor, clickColor).apply {
-            duration = 125
+            duration = 80
             addUpdateListener {
                 keyColorValue = it.animatedValue as Int
                 invalidate()
@@ -269,8 +263,8 @@ class KeyBoardView @JvmOverloads constructor(
                     }
 
                     MotionEvent.ACTION_UP -> {
-                        animator.reverse()
                         performClick()
+                        animator.reverse()
                         true
                     }
                     else -> {
@@ -293,9 +287,5 @@ class KeyBoardView @JvmOverloads constructor(
     interface OnKeyClickListener {
         fun onClick(char: Char)
         fun onClick(key: SpecialKeys)
-    }
-
-    interface KeyCommunicator {
-        fun getPrevious(): KeyView?
     }
 }

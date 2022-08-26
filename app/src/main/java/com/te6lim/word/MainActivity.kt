@@ -12,26 +12,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val gameBoard = findViewById<GameBoard>(R.id.gameBoard)
-
-        val game = WordGame()
+        gameBoard.setUpWithWordGame(WordGame())
 
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
 
         keyBoard.setOnKeyClickListener(object : KeyBoardView.OnKeyClickListener {
 
             override fun onClick(char: Char) {
-                game.addLetter(char)
-                gameBoard.showCharacter(char)
+                gameBoard.setCharacter(char)
             }
 
             override fun onClick(key: KeyBoardView.SpecialKeys) {
                 when (key) {
                     KeyBoardView.SpecialKeys.ENTER -> {
-                        gameBoard.guesses = game.getAllGuesses()
+                        gameBoard.submitLatestGuess()
                     }
 
                     KeyBoardView.SpecialKeys.DELETE -> {
-                        game.removeLastLetter()
                         gameBoard.clearLastCharacter()
                     }
                 }

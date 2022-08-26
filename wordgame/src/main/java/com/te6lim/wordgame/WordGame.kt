@@ -3,7 +3,7 @@ package com.te6lim.wordgame
 class WordGame(private val source: WordSource? = null) {
 
     companion object {
-        private const val MAX_TRIAL = 6
+        const val MAX_TRIAL = 6
         var WORD_LENGTH = 5
             private set
     }
@@ -19,28 +19,40 @@ class WordGame(private val source: WordSource? = null) {
 
     private var guesses: List<GuessInfo> = mutableListOf()
 
-    fun addLetter(letter: Char) {
+    internal fun addLetter(letter: Char) {
         if (guessWord.length < WORD_LENGTH) guessWord.append(letter)
     }
 
-    fun removeLastLetter() {
+    internal fun removeLastLetter() {
         if (guessWord.isNotEmpty()) guessWord.deleteCharAt(guessWord.lastIndex)
     }
 
     fun getAllGuesses(): List<GuessInfo> {
-        if (t < MAX_TRIAL && guessWord.isNotEmpty()) {
-            val guessInfo = GuessInfo(guessWord.toString())
+        if (t < MAX_TRIAL - 1 && guessWord.isNotEmpty()) {
+            val guessInfo = GuessInfo(guessWord.toString(), t++)
             guesses = guesses.toMutableList().apply { add(guessInfo) }
             guessWord = StringBuilder()
         }
         return guesses
     }
 
-    open inner class GuessInfo(guess: String) {
+    internal fun getLatestGuess(): GuessInfo? {
+        if (t < MAX_TRIAL) {
+            val guessInfo = GuessInfo(guessWord.toString(), t++)
+            guesses = guesses.toMutableList().apply { add(guessInfo) }
+            guessWord = StringBuilder()
+            return guessInfo
+        }
+        return null
+    }
+
+    open inner class GuessInfo internal constructor(guess: String, t: Int) {
 
         private var misplacedCharacters = listOf<Char>()
 
         private var wrongCharacters = listOf<Char>()
+
+        internal val trial = t
 
         internal val guessWord = guess.uppercase()
 
@@ -53,11 +65,6 @@ class WordGame(private val source: WordSource? = null) {
 
                 for (c in word) unUsedCharacters.add(c)
             }
-        }
-
-        fun resetUnUsedCharacters() {
-            unUsedCharacters = arrayListOf()
-            for (c in word) unUsedCharacters.add(c)
         }
 
         private fun misplacedCharacters(): List<Char> {
