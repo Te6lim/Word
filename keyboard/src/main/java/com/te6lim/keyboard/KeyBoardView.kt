@@ -6,6 +6,8 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import kotlin.math.roundToInt
 
 class KeyBoardView @JvmOverloads constructor(
@@ -217,7 +219,12 @@ class KeyBoardView @JvmOverloads constructor(
                     char, keyWidth * 0.5f, textAccent, paint
                 )
             } else {
-                canvas.drawText(char, (keyWidth + secondRowConst) * 0.5f, textAccent, paint)
+                val pic = ContextCompat.getDrawable(context, R.drawable.ic_backspace)!!.toBitmap()
+                if (isDeleteKey()) canvas.drawBitmap(
+                    pic, (thirdRowConst - pic.width) / 2f,
+                    ((thirdRowConst - pic.height) / 2f) + gap, paint
+                )
+                else canvas.drawText(char, (keyWidth + secondRowConst) * 0.5f, textAccent, paint)
             }
         }
 
@@ -235,6 +242,10 @@ class KeyBoardView @JvmOverloads constructor(
 
         private fun isEnterKeyOrDelete(): Boolean {
             return char == "ENTER" || char == "DEL"
+        }
+
+        private fun isDeleteKey(): Boolean {
+            return char == "DEL"
         }
     }
 

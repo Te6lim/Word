@@ -1,6 +1,6 @@
 package com.te6lim.wordgame
 
-abstract class WordRepository {
+abstract class WordSource {
 
     abstract fun getWord(): String
 }
