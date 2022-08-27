@@ -1,5 +1,7 @@
 package com.te6lim.wordgame
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -23,6 +25,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     private var cellWidth = 0.0f
+    private val margin = resources.getDimension(R.dimen.margin)
+
+    private var squareGroupWidth = 0.0f
+    private var squareGroupHeight = 0.0f
 
 
     private val attrRow = attributeArray.getInt(R.styleable.GameBoard_row, 1)
@@ -85,6 +91,21 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private fun newSquareGroup(): SquareGroup {
         return SquareGroup(context, attrCol, object : MotherBoardInterface {
             override fun squareWidth() = cellWidth
+            override fun squareGroupWidth(): Float {
+                return squareGroupWidth
+            }
+
+            override fun squareGroupHeight(): Float {
+                return squareGroupHeight
+            }
+
+            override fun getRowCount(): Int {
+                return attrRow
+            }
+
+            override fun getColumnCount(): Int {
+                return attrCol
+            }
         })
     }
 
@@ -96,6 +117,22 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
             override fun squareWidth(): Float {
                 return cellWidth
+            }
+
+            override fun getRowCount(): Int {
+                return attrRow
+            }
+
+            override fun getColumnCount(): Int {
+                return attrCol
+            }
+
+            override fun squareGroupWidth(): Float {
+                return squareGroupWidth
+            }
+
+            override fun squareGroupHeight(): Float {
+                return squareGroupHeight
             }
 
             override fun getColor(type: ColorType): Int {
@@ -114,8 +151,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     private fun PointF.calculateCoordinate(r: Int) {
-        x = 0f
-        y = if (r == 0) 0f else (r) * cellWidth
+        x = margin / 2f
+        y = if (r == 0) margin / 2f else ((r * squareGroupHeight) + (margin / 2))
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -131,8 +168,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         var heightSize = MeasureSpec.getSize(heightMeasureSpec)
         if (heightMode == MeasureSpec.AT_MOST) {
-            heightSize = if (attrRow >= attrCol) widthSize + ((widthSize / attrCol) * (attrRow - attrCol))
-            else (widthSize / attrCol) * attrRow
+            heightSize = if (attrRow >= attrCol)
+                widthSize + ((widthSize / attrCol) * (attrRow - attrCol))
+            else ((widthSize / attrCol) * attrRow)
         }
 
         setMeasuredDimension(widthSize, heightSize)
@@ -140,7 +178,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        cellWidth = width / attrCol.toFloat()
+        squareGroupWidth = (w) - margin
+        squareGroupHeight = (w - margin) / attrCol.toFloat()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -151,8 +190,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         for ((i, s) in squareGroups.withIndex()) {
             point.calculateCoordinate(i)
             s.layout(
-                point.x.toInt(), point.y.roundToInt(), (attrCol * cellWidth).roundToInt(),
-                ((i + 1) * cellWidth).roundToInt()
+                (point.x).roundToInt(), point.y.roundToInt(),
+                (squareGroupWidth + (margin / 2f)).roundToInt(),
+                (((i + 1) * squareGroupHeight) + (margin / 2f)).roundToInt()
             )
         }
     }
@@ -173,21 +213,21 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     fun submitLatestGuess() {
-        charPosition = 0
         submitted = true
 
         game?.getLatestGuess()?.let {
 
             if (it.guessWord.length < WORD_LENGTH) guessFlag = GuessFlag.INCOMPLETE
+            else if (it.guessWord.length == WORD_LENGTH) guessFlag = GuessFlag.INCORRECT
 
             when (guessFlag) {
                 GuessFlag.INCORRECT -> {
+                    charPosition = 0
                     turn = it.trial + 1
                     setNewSquaresInRow(it)
                     if (it.isCorrect()) {
                         guessFlag = GuessFlag.CORRECT
-                        turn = -1
-                        charPosition = -1
+                        disableInput()
                     }
                 }
 
@@ -196,13 +236,93 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 }
 
                 GuessFlag.CORRECT -> {
-
                 }
             }
         }
     }
 
+    private fun disableInput() {
+        turn = -1
+        charPosition = -1
+    }
+
     fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {}
+
+    private class SquareGroup(
+        context: Context, private val columnSize: Int, private val listener: MotherBoardInterface
+    ) : ViewGroup(context) {
+
+        private val point = PointF(0f, 0f)
+
+        val squares = arrayListOf<Square>()
+
+        private var cellWidth = 0.0f
+        private val density = resources.displayMetrics.density
+        private val margin = 2 * (density * 4)
+
+        private lateinit var translateRight: PropertyValuesHolder
+        private lateinit var translateLeft: PropertyValuesHolder
+        private lateinit var animator: ObjectAnimator
+
+        fun addToSquareGroup(square: Square) {
+            squares.add(square)
+            addView(square)
+        }
+
+        private fun PointF.calculateCoordinate(col: Int) {
+            x = if (col == 0) 0f else col * cellWidth
+            y = 0f
+        }
+
+        private fun right(col: Int): Float {
+            return (col + 1) * cellWidth
+        }
+
+        private fun bottom(): Float {
+            return cellWidth
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            cellWidth = listener.squareGroupWidth() / listener.getColumnCount()
+            translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, cellWidth / 10)
+            translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -(cellWidth / 10))
+            animator = ObjectAnimator.ofPropertyValuesHolder(
+                this, translateRight
+            ).apply {
+                repeatMode = ObjectAnimator.REVERSE
+                repeatCount = 1
+                duration = 125
+            }
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+        }
+
+        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+            for ((i, s) in squares.withIndex()) {
+                point.calculateCoordinate(i)
+                s.layout(
+                    point.x.roundToInt(), point.y.roundToInt(), right(i).roundToInt(), bottom()
+                        .roundToInt()
+                )
+            }
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            setMeasuredDimension(
+                (listener.squareGroupWidth()).roundToInt(), (listener.squareGroupHeight()).roundToInt()
+            )
+        }
+
+        fun animateSquareGroup() {
+            animator.apply {
+                end()
+                start()
+            }
+        }
+    }
 
     private class Square(
         context: Context, char: Char = '\u0000',
@@ -245,7 +365,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
             super.onSizeChanged(w, h, oldw, oldh)
-            cellWidth = listener.squareWidth()
+            cellWidth = listener.squareGroupWidth() / listener.getColumnCount()
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -298,70 +418,29 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
     }
 
-    private class SquareGroup(
-        context: Context, private val columnSize: Int, private val listener: MotherBoardInterface
-    ) : ViewGroup(context) {
-
-        private val point = PointF(0f, 0f)
-
-        val squares = arrayListOf<Square>()
-
-        private var cellWidth = 0.0f
-
-        fun addToSquareGroup(square: Square) {
-            squares.add(square)
-            addView(square)
-        }
-
-        private fun PointF.calculateCoordinate(col: Int) {
-            x = if (col == 0) 0f else col * cellWidth
-            y = 0f
-        }
-
-        private fun right(col: Int): Float {
-            return (col + 1) * cellWidth
-        }
-
-        private fun bottom(): Float {
-            return cellWidth
-        }
-
-        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-            super.onSizeChanged(w, h, oldw, oldh)
-            cellWidth = listener.squareWidth()
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-        }
-
-        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-            for ((i, s) in squares.withIndex()) {
-                point.calculateCoordinate(i)
-                s.layout(
-                    point.x.roundToInt(), point.y.roundToInt(), right(i).roundToInt(), bottom().roundToInt()
-                )
-            }
-        }
-
-        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension(
-                (cellWidth * columnSize).toInt(), cellWidth.toInt()
-            )
-        }
-
-        fun animateSquareGroup() {
-
-        }
-    }
-
     interface MotherBoardInterface {
+
+        fun getRowCount(): Int {
+            return 0
+        }
+
+        fun getColumnCount(): Int {
+            return 0
+        }
 
         fun getInfo(): WordGame.GuessInfo? {
             return null
         }
 
         fun squareWidth(): Float {
+            return 0.0f
+        }
+
+        fun squareGroupWidth(): Float {
+            return 0.0f
+        }
+
+        fun squareGroupHeight(): Float {
             return 0.0f
         }
 

@@ -38,10 +38,13 @@ class WordGame(private val source: WordSource? = null) {
 
     internal fun getLatestGuess(): GuessInfo? {
         if (t < MAX_TRIAL) {
-            val guessInfo = GuessInfo(guessWord.toString(), t++)
-            guesses = guesses.toMutableList().apply { add(guessInfo) }
-            guessWord = StringBuilder()
-            return guessInfo
+            return if (guessWord.length < WORD_LENGTH) GuessInfo(guessWord.toString(), t)
+            else {
+                val guessInfo = GuessInfo(guessWord.toString(), t++)
+                guesses = guesses.toMutableList().apply { add(guessInfo) }
+                guessWord = StringBuilder()
+                guessInfo
+            }
         }
         return null
     }
