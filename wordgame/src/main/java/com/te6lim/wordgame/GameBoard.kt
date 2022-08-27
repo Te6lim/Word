@@ -18,6 +18,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         CORRECT, MISPLACED, WRONG, FRAME
     }
 
+    enum class GuessFlag {
+        CORRECT, INCORRECT, INCOMPLETE,
+    }
+
     private var cellWidth = 0.0f
 
 
@@ -39,17 +43,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var game: WordGame? = null
 
-    private var guesses = listOf<WordGame.GuessInfo>()
-        set(value) {
-            if (value.isNotEmpty() && value.size > field.size) {
-                field = value
-                removeAllViews()
-                generateLetters()
-                invalidate()
-            }
-        }
-
     private var squareGroups = arrayListOf<SquareGroup>()
+
+    private var guessFlag = GuessFlag.INCORRECT
 
     init {
         generateLetters()
@@ -61,23 +57,18 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private fun setNewSquaresInRow(guessInfo: WordGame.GuessInfo?) {
         val index = guessInfo?.trial ?: 0
+        val group: SquareGroup = newSquareGroup()
         if (index < squareGroups.size && guessInfo != null) {
-            val group = newSquareGroup()
             removeViewAt(index)
             squareGroups[index] = group
             addView(squareGroups[index], index)
-            for (c in 0 until attrCol) {
-                val square = newSquare(index, getCharForColumn(c, guessInfo), guessInfo)
-                group.addToSquareGroup(square)
-            }
         } else {
-            val group = newSquareGroup()
             squareGroups.add(group)
             addView(group)
-            for (c in 0 until attrCol) {
-                val square = newSquare(index, getCharForColumn(c, guessInfo), guessInfo)
-                group.addToSquareGroup(square)
-            }
+        }
+        for (c in 0 until attrCol) {
+            val square = newSquare(getCharForColumn(c, guessInfo), guessInfo)
+            group.addToSquareGroup(square)
         }
     }
 
@@ -97,7 +88,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         })
     }
 
-    private fun newSquare(r: Int, letter: Char, guessInfo: WordGame.GuessInfo?): Square {
+    private fun newSquare(letter: Char, guessInfo: WordGame.GuessInfo?): Square {
         return Square(context, letter.uppercaseChar(), object : MotherBoardInterface {
             override fun getInfo(): WordGame.GuessInfo? {
                 return guessInfo
@@ -169,7 +160,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     fun setCharacter(char: Char) {
         game?.addLetter(char)
         submitted = false
-        if (turn < MAX_TRIAL && charPosition < WORD_LENGTH) {
+        if (turn in 0 until MAX_TRIAL && charPosition in 0 until WORD_LENGTH) {
             squareGroups[turn].squares[charPosition++].letter = char
         }
     }
@@ -186,15 +177,32 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         submitted = true
 
         game?.getLatestGuess()?.let {
-            turn = it.trial + 1
-            setNewSquaresInRow(it)
+
+            if (it.guessWord.length < WORD_LENGTH) guessFlag = GuessFlag.INCOMPLETE
+
+            when (guessFlag) {
+                GuessFlag.INCORRECT -> {
+                    turn = it.trial + 1
+                    setNewSquaresInRow(it)
+                    if (it.isCorrect()) {
+                        guessFlag = GuessFlag.CORRECT
+                        turn = -1
+                        charPosition = -1
+                    }
+                }
+
+                GuessFlag.INCOMPLETE -> {
+                    squareGroups[it.trial].animateSquareGroup()
+                }
+
+                GuessFlag.CORRECT -> {
+
+                }
+            }
         }
-        squareGroups.lastOrNull()?.invalidate()
     }
 
-    fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {
-        guesses = guessList
-    }
+    fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {}
 
     private class Square(
         context: Context, char: Char = '\u0000',
@@ -251,11 +259,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
                     listener.getColor(ColorType.MISPLACED) else listener.getColor(ColorType.WRONG)
                 canvas.drawRect(
-                    stroke,
-                    stroke,
-                    cellWidth - stroke,
-                    cellWidth - stroke,
-                    paint
+                    stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                 )
             } else {
                 if (listener.getInfo()?.isRight(letter) == true) {
@@ -263,32 +267,20 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                     paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
                         listener.getColor(ColorType.CORRECT) else listener.getColor(ColorType.WRONG)
                     canvas.drawRect(
-                        stroke,
-                        stroke,
-                        cellWidth - stroke,
-                        cellWidth - stroke,
-                        paint
+                        stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                     )
                 } else {
                     if (listener.getInfo()?.isWrong(letter) == true) {
                         paint.style = Paint.Style.FILL
                         paint.color = listener.getColor(ColorType.WRONG)
                         canvas.drawRect(
-                            stroke,
-                            stroke,
-                            cellWidth - stroke,
-                            cellWidth - stroke,
-                            paint
+                            stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
                     } else {
                         paint.style = Paint.Style.STROKE
                         paint.color = listener.getColor(ColorType.FRAME)
                         canvas.drawRect(
-                            stroke,
-                            stroke,
-                            cellWidth - stroke,
-                            cellWidth - stroke,
-                            paint
+                            stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
                     }
                 }
@@ -356,6 +348,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             setMeasuredDimension(
                 (cellWidth * columnSize).toInt(), cellWidth.toInt()
             )
+        }
+
+        fun animateSquareGroup() {
+
         }
     }
 

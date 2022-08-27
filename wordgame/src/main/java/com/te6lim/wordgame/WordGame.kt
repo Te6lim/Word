@@ -106,5 +106,9 @@ class WordGame(private val source: WordSource? = null) {
         internal fun isRight(char: Char): Boolean {
             return !this.isMisplaced(char.uppercaseChar()) && !this.isWrong(char.uppercaseChar())
         }
+
+        internal fun isCorrect(): Boolean {
+            return guessWord.isNotEmpty() && misplacedCharacters.isEmpty() && wrongCharacters.isEmpty()
+        }
     }
 }

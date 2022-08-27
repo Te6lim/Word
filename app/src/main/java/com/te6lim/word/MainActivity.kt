@@ -11,8 +11,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val wordGame = WordGame()
         val gameBoard = findViewById<GameBoard>(R.id.gameBoard)
-        gameBoard.setUpWithWordGame(WordGame())
+        gameBoard.setUpWithWordGame(wordGame)
 
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
 
