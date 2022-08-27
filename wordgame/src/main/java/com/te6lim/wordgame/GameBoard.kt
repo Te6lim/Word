@@ -1,5 +1,6 @@
 package com.te6lim.wordgame
 
+import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.Context
@@ -257,12 +258,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         val squares = arrayListOf<Square>()
 
         private var cellWidth = 0.0f
-        private val density = resources.displayMetrics.density
-        private val margin = 2 * (density * 4)
 
         private lateinit var translateRight: PropertyValuesHolder
         private lateinit var translateLeft: PropertyValuesHolder
-        private lateinit var animator: ObjectAnimator
+        private lateinit var animatorRight: ObjectAnimator
+        private lateinit var animatorLeft: ObjectAnimator
+        private lateinit var animSet: AnimatorSet
 
         fun addToSquareGroup(square: Square) {
             squares.add(square)
@@ -287,12 +288,22 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             cellWidth = listener.squareGroupWidth() / listener.getColumnCount()
             translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, cellWidth / 10)
             translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -(cellWidth / 10))
-            animator = ObjectAnimator.ofPropertyValuesHolder(
+            animatorRight = ObjectAnimator.ofPropertyValuesHolder(
                 this, translateRight
             ).apply {
                 repeatMode = ObjectAnimator.REVERSE
                 repeatCount = 1
-                duration = 125
+                duration = 30
+            }
+
+            animatorLeft = ObjectAnimator.ofPropertyValuesHolder(this, translateLeft).apply {
+                repeatMode = ObjectAnimator.REVERSE
+                repeatCount = 1
+                duration = 30
+            }
+
+            animSet = AnimatorSet().apply {
+                playSequentially(animatorRight, animatorLeft)
             }
         }
 
@@ -317,7 +328,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         fun animateSquareGroup() {
-            animator.apply {
+            animSet.apply {
                 end()
                 start()
             }
