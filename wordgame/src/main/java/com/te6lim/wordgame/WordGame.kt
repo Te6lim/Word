@@ -51,9 +51,9 @@ class WordGame(private val source: WordSource? = null) {
 
     open inner class GuessInfo internal constructor(guess: String, t: Int) {
 
-        private var misplacedCharacters = listOf<Char>()
+        internal var misplacedCharacters = listOf<Char>()
 
-        private var wrongCharacters = listOf<Char>()
+        internal var wrongCharacters = listOf<Char>()
 
         internal val trial = t
 

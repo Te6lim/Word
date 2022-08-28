@@ -42,6 +42,41 @@ class KeyBoardView @JvmOverloads constructor(
     private val keyColor = Color.rgb(211, 214, 219)
     private val clickColor = Color.rgb(120, 124, 127)
 
+    val gameBoardAdapter = object : GameBoardAdapter {
+        override fun paintKeys(letters: List<Char>, state: GameBoardAdapter.GuessState) {
+            for (c in letters) {
+                when (getKeyType(c)) {
+                    KeyType.TOP -> {
+                        topKeys.find {
+                            it.char == c.toString()
+                        }?.apply {
+                            keyColorValue = getColorOfState(state)
+                            invalidate()
+                        }
+                    }
+
+                    KeyType.MIDDLE -> {
+                        middleKeys.find {
+                            it.char == c.toString()
+                        }?.apply {
+                            keyColorValue = getColorOfState(state)
+                            invalidate()
+                        }
+                    }
+
+                    KeyType.BOTTOM -> {
+                        bottomKeys.find {
+                            it.char == c.toString()
+                        }?.apply {
+                            keyColorValue = getColorOfState(state)
+                            invalidate()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     init {
         for (c in topChars) topKeys.add(KeyView(c).apply { addView(this) })
         for (c in middleChars) middleKeys.add(KeyView(c).apply { addView(this) })
@@ -174,7 +209,7 @@ class KeyBoardView @JvmOverloads constructor(
         for (k in bottomKeys) k.clickListener = listener
     }
 
-    inner class KeyView(private val char: String) : View(context) {
+    inner class KeyView(val char: String) : View(context) {
 
         private var gap = 0f
         private var corner = 0f
@@ -182,7 +217,7 @@ class KeyBoardView @JvmOverloads constructor(
 
         internal var clickListener: OnKeyClickListener? = null
 
-        private var keyColorValue = keyColor
+        var keyColorValue = keyColor
 
         private var topValueForLargeRect = 0f
 
@@ -282,6 +317,12 @@ class KeyBoardView @JvmOverloads constructor(
         private fun isDeleteKey(): Boolean {
             return char == "DEL"
         }
+    }
+
+    private fun getKeyType(char: Char): KeyType {
+        if (topChars.contains(char.toString())) return KeyType.TOP
+        return if (middleChars.contains(char.toString())) KeyType.MIDDLE
+        else KeyType.BOTTOM
     }
 
     interface OnKeyClickListener {

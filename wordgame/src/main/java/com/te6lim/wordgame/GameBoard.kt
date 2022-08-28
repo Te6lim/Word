@@ -15,10 +15,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private val attributeArray = context.theme
         .obtainStyledAttributes(attributeSet, R.styleable.GameBoard, 0, 0)
 
-    enum class ColorType {
-        CORRECT, MISPLACED, WRONG, FRAME
-    }
-
     enum class GuessFlag {
         CORRECT, INCORRECT, INCOMPLETE,
     }
@@ -120,40 +116,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             override fun getInfo(): WordGame.GuessInfo? {
                 return guessInfo
             }
-
-            override fun getRowCount(): Int {
-                return attrRow
-            }
-
-            override fun getColumnCount(): Int {
-                return attrCol
-            }
-
-            override fun gap(): Float {
-                return gap
-            }
-
-            override fun incrementOrChangeDrawCount(value: Int) {
-                if (value != 0) ++drawCount
-                else drawCount = value
-            }
-
-            override fun drawCount(): Int {
-                return drawCount
-            }
-
-            override fun getColor(type: ColorType): Int {
-                return when (type) {
-                    ColorType.CORRECT -> correctColor
-                    ColorType.MISPLACED -> misplacedColor
-                    ColorType.WRONG -> wrongColor
-                    ColorType.FRAME -> frameColor
-                }
-            }
-
-            override fun submittedStatus(): Boolean {
-                return submitted
-            }
         })
     }
 
@@ -241,6 +203,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 GuessFlag.INCORRECT -> {
                     charPosition = 0
                     turn = it.trial + 1
+                    submitListener?.onSubmit(
+                        if (it.isCorrect()) it.guessWord.toList() else listOf(),
+                        it.misplacedCharacters, it.wrongCharacters
+                    )
                     setNewSquaresInRow(it.trial, it)
                     if (it.isCorrect()) {
                         guessFlag = GuessFlag.CORRECT
@@ -296,7 +262,13 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         return list
     }
 
-    class Square(
+    private var submitListener: SubmitListener? = null
+
+    fun setOnGuessSubmittedListener(listener: SubmitListener) {
+        submitListener = listener
+    }
+
+    inner class Square(
         context: Context, char: Char = '\u0000',
         private val listener: MotherBoardInterface
     ) : View(context) {
@@ -317,7 +289,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         private var cellWidth = 0.0f
 
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = listener.getColor(ColorType.FRAME)
+            color = frameColor
             style = Paint.Style.STROKE
             strokeWidth = stroke
             isAntiAlias = true
@@ -362,8 +334,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onDraw(canvas: Canvas) {
-            if (listener.drawCount() == 0) listener.getInfo()?.resetUnselectedCharacters()
-            listener.incrementOrChangeDrawCount()
+            if (drawCount == 0) listener.getInfo()?.resetUnselectedCharacters()
+            ++drawCount
             paint.apply {
                 style = Paint.Style.STROKE
                 paint.style = Paint.Style.STROKE
@@ -372,7 +344,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             if (listener.getInfo()?.isMisplaced(letter) == true) {
                 paint.style = Paint.Style.FILL
                 paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                    listener.getColor(ColorType.MISPLACED) else listener.getColor(ColorType.WRONG)
+                    misplacedColor else wrongColor
                 canvas.drawRect(
                     stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                 )
@@ -380,21 +352,21 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 if (listener.getInfo()?.isRight(letter) == true) {
                     paint.style = Paint.Style.FILL
                     paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                        listener.getColor(ColorType.CORRECT) else listener.getColor(ColorType.WRONG)
+                        correctColor else wrongColor
                     canvas.drawRect(
                         stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                     )
                 } else {
                     if (listener.getInfo()?.isWrong(letter) == true) {
                         paint.style = Paint.Style.FILL
-                        paint.color = listener.getColor(ColorType.WRONG)
+                        paint.color = wrongColor
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
                     } else {
                         paint.style = Paint.Style.STROKE
-                        paint.color = if (letter == '\u0000') listener.getColor(ColorType.FRAME)
-                        else listener.getColor(ColorType.WRONG)
+                        paint.color = if (letter == '\u0000') frameColor
+                        else wrongColor
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
@@ -405,7 +377,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
             point.calculateTextPosition()
             paint.apply {
-                color = if (listener.submittedStatus()) textColorWhite else textColorBlack
+                color = if (submitted) textColorWhite else textColorBlack
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
                 textSize = cellWidth / 2f
@@ -420,7 +392,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         fun getTranslateRight(): ObjectAnimator {
-            val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, listener.gap())
+            val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, gap)
             return ObjectAnimator.ofPropertyValuesHolder(this, translateRight).apply {
                 duration = 30
                 repeatCount = 1
@@ -429,7 +401,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         fun getTranslateLeft(): ObjectAnimator {
-            val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -listener.gap())
+            val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -gap)
             return ObjectAnimator.ofPropertyValuesHolder(this, translateLeft).apply {
                 duration = 30
                 repeatCount = 1
@@ -441,32 +413,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     interface MotherBoardInterface {
 
-        fun getRowCount(): Int {
-            return 0
-        }
-
-        fun getColumnCount(): Int {
-            return 0
-        }
-
         fun getInfo(): WordGame.GuessInfo? {
             return null
         }
+    }
 
-        fun getColor(type: ColorType): Int {
-            return Color.rgb(0, 0, 0)
-        }
-
-        fun submittedStatus(): Boolean {
-            return false
-        }
-
-        fun gap(): Float {
-            return 0f
-        }
-
-        fun incrementOrChangeDrawCount(value: Int = 0)
-
-        fun drawCount(): Int
+    interface SubmitListener {
+        fun onSubmit(correctChar: List<Char>, misplacedChars: List<Char>, wrongChar: List<Char>)
     }
 }

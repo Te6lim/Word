@@ -2,6 +2,7 @@ package com.te6lim.word
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.te6lim.keyboard.GameBoardAdapter
 import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.wordgame.GameBoard
 import com.te6lim.wordgame.WordGame
@@ -16,6 +17,18 @@ class MainActivity : AppCompatActivity() {
         gameBoard.setUpWithWordGame(wordGame)
 
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
+
+        gameBoard.setOnGuessSubmittedListener(object : GameBoard.SubmitListener {
+            override fun onSubmit(
+                correctChar: List<Char>, misplacedChars: List<Char>, wrongChar: List<Char>
+            ) {
+                with(keyBoard.gameBoardAdapter) {
+                    paintKeys(correctChar, GameBoardAdapter.GuessState.CORRECT)
+                    paintKeys(misplacedChars, GameBoardAdapter.GuessState.MISPLACED)
+                    paintKeys(wrongChar, GameBoardAdapter.GuessState.WRONG)
+                }
+            }
+        })
 
         keyBoard.setOnKeyClickListener(object : KeyBoardView.OnKeyClickListener {
 
