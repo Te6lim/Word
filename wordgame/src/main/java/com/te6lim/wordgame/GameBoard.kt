@@ -1,8 +1,6 @@
 package com.te6lim.wordgame
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
+import android.animation.*
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -26,10 +24,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     private var cellWidth = 0.0f
-    private val margin = resources.getDimension(R.dimen.margin)
-
-    private var squareGroupWidth = 0.0f
-    private var squareGroupHeight = 0.0f
+    private val gap = resources.getDimension(R.dimen.gap)
 
 
     private val attrRow = attributeArray.getInt(R.styleable.GameBoard_row, 1)
@@ -50,9 +45,43 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var game: WordGame? = null
 
-    private var squareGroups = arrayListOf<SquareGroup>()
+    private var squareGroups = arrayListOf<ArrayList<Square>>()
 
     private var guessFlag = GuessFlag.INCORRECT
+
+    private val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, gap)
+    private val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -gap)
+
+    private fun ArrayList<Square>.animateRow(): AnimatorSet {
+        val list = arrayListOf<AnimatorSet>()
+
+        for (i in 0 until size) {
+            list.add(AnimatorSet().apply {
+                playSequentially(
+                    getTranslateRight(i, this@animateRow), getTranslateLeft(i, this@animateRow)
+                )
+            })
+        }
+        return AnimatorSet().apply {
+            playTogether(*list.toTypedArray())
+        }
+    }
+
+    private fun getTranslateRight(position: Int, list: ArrayList<Square>): ObjectAnimator {
+        return ObjectAnimator.ofPropertyValuesHolder(list[position], translateRight).apply {
+            duration = 30
+            repeatCount = 1
+            repeatMode = ObjectAnimator.REVERSE
+        }
+    }
+
+    private fun getTranslateLeft(position: Int, list: ArrayList<Square>): ObjectAnimator {
+        return ObjectAnimator.ofPropertyValuesHolder(list[position], translateLeft).apply {
+            duration = 30
+            repeatCount = 1
+            repeatMode = ObjectAnimator.REVERSE
+        }
+    }
 
     init {
         generateLetters()
@@ -62,25 +91,38 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         game = g
     }
 
-    private fun setNewSquaresInRow(guessInfo: WordGame.GuessInfo?) {
-        val index = guessInfo?.trial ?: 0
-        val group: SquareGroup = newSquareGroup()
-        if (index < squareGroups.size && guessInfo != null) {
-            removeViewAt(index)
-            squareGroups[index] = group
-            addView(squareGroups[index], index)
-        } else {
-            squareGroups.add(group)
-            addView(group)
-        }
+    private fun pos(r: Int, col: Int): Int {
+        return (r * attrCol) + col
+    }
+
+    private fun removeViewInRow(r: Int) {
         for (c in 0 until attrCol) {
-            val square = newSquare(getCharForColumn(c, guessInfo), guessInfo)
-            group.addToSquareGroup(square)
+            removeViewAt(pos(r, c))
+        }
+    }
+
+    private fun addViews(list: ArrayList<Square>, r: Int) {
+        for (c in 0 until attrCol) {
+            addView(list[c], pos(r, c))
         }
     }
 
     private fun generateLetters() {
-        for (i in 0 until attrRow) setNewSquaresInRow(null)
+        for (r in 0 until attrRow) {
+            setNewSquaresInRow(r, null)
+        }
+    }
+
+    private fun setNewSquaresInRow(index: Int, guessInfo: WordGame.GuessInfo?) {
+        val group: ArrayList<Square> = newSquareGroup(guessInfo)
+        if (index < squareGroups.size && guessInfo != null) {
+            removeViewInRow(index)
+            squareGroups[index] = group
+            addViews(squareGroups[index], index)
+        } else {
+            squareGroups.add(group)
+            addViews(group, index)
+        }
     }
 
     private fun getCharForColumn(c: Int, guessInfo: WordGame.GuessInfo?): Char {
@@ -89,25 +131,11 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         } ?: '\u0000'
     }
 
-    private fun newSquareGroup(): SquareGroup {
-        return SquareGroup(context, attrCol, object : MotherBoardInterface {
-            override fun squareWidth() = cellWidth
-            override fun squareGroupWidth(): Float {
-                return squareGroupWidth
-            }
-
-            override fun squareGroupHeight(): Float {
-                return squareGroupHeight
-            }
-
-            override fun getRowCount(): Int {
-                return attrRow
-            }
-
-            override fun getColumnCount(): Int {
-                return attrCol
-            }
-        })
+    private fun newSquareGroup(guessInfo: WordGame.GuessInfo?): ArrayList<Square> {
+        val list = ArrayList<Square>()
+        for (i in 0 until attrCol)
+            list.add(newSquare(getCharForColumn(i, guessInfo), guessInfo))
+        return list
     }
 
     private fun newSquare(letter: Char, guessInfo: WordGame.GuessInfo?): Square {
@@ -128,14 +156,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 return attrCol
             }
 
-            override fun squareGroupWidth(): Float {
-                return squareGroupWidth
-            }
-
-            override fun squareGroupHeight(): Float {
-                return squareGroupHeight
-            }
-
             override fun getColor(type: ColorType): Int {
                 return when (type) {
                     ColorType.CORRECT -> correctColor
@@ -151,9 +171,19 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         })
     }
 
-    private fun PointF.calculateCoordinate(r: Int) {
-        x = margin / 2f
-        y = if (r == 0) margin / 2f else ((r * squareGroupHeight) + (margin / 2))
+    private fun PointF.computeXY(r: Int, c: Int) {
+        x = if (c == 0) gap else (c * cellWidth) + ((c + 1) * gap)
+        y = if (r == 0) gap else (r * cellWidth) + ((r + 1) * gap)
+    }
+
+    private fun right(r: Int, c: Int): Float {
+        point.computeXY(r, c)
+        return point.x + cellWidth
+    }
+
+    private fun bottom(r: Int, c: Int): Float {
+        point.computeXY(r, c)
+        return point.y + cellWidth
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -179,8 +209,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        squareGroupWidth = (w) - margin
-        squareGroupHeight = (w - margin) / attrCol.toFloat()
+        cellWidth = (w - ((1 + attrCol) * gap)) / attrCol.toFloat()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -188,13 +217,14 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        for ((i, s) in squareGroups.withIndex()) {
-            point.calculateCoordinate(i)
-            s.layout(
-                (point.x).roundToInt(), point.y.roundToInt(),
-                (squareGroupWidth + (margin / 2f)).roundToInt(),
-                (((i + 1) * squareGroupHeight) + (margin / 2f)).roundToInt()
-            )
+        for (r in 0 until attrRow) {
+            for (c in 0 until attrCol) {
+                point.computeXY(r, c)
+                squareGroups[r][c].layout(
+                    point.x.roundToInt(), point.y.roundToInt(),
+                    right(r, c).roundToInt(), bottom(r, c).roundToInt()
+                )
+            }
         }
     }
 
@@ -202,14 +232,14 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         game?.addLetter(char)
         submitted = false
         if (turn in 0 until MAX_TRIAL && charPosition in 0 until WORD_LENGTH) {
-            squareGroups[turn].squares[charPosition++].letter = char
+            squareGroups[turn][charPosition++].letter = char
         }
     }
 
     fun clearLastCharacter() {
         game?.removeLastLetter()
         if (turn < MAX_TRIAL && charPosition > 0) {
-            squareGroups[turn].squares[--charPosition].letter = '\u0000'
+            squareGroups[turn][--charPosition].letter = '\u0000'
         }
     }
 
@@ -225,7 +255,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 GuessFlag.INCORRECT -> {
                     charPosition = 0
                     turn = it.trial + 1
-                    setNewSquaresInRow(it)
+                    setNewSquaresInRow(it.trial, it)
                     if (it.isCorrect()) {
                         guessFlag = GuessFlag.CORRECT
                         disableInput()
@@ -233,7 +263,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 }
 
                 GuessFlag.INCOMPLETE -> {
-                    squareGroups[it.trial].animateSquareGroup()
+                    with(squareGroups[it.trial].animateRow()) {
+                        end()
+                        start()
+                    }
                 }
 
                 GuessFlag.CORRECT -> {
@@ -249,93 +282,11 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {}
 
-    private class SquareGroup(
-        context: Context, private val columnSize: Int, private val listener: MotherBoardInterface
-    ) : ViewGroup(context) {
+    private fun animateGroup() {
 
-        private val point = PointF(0f, 0f)
-
-        val squares = arrayListOf<Square>()
-
-        private var cellWidth = 0.0f
-
-        private lateinit var translateRight: PropertyValuesHolder
-        private lateinit var translateLeft: PropertyValuesHolder
-        private lateinit var animatorRight: ObjectAnimator
-        private lateinit var animatorLeft: ObjectAnimator
-        private lateinit var animSet: AnimatorSet
-
-        fun addToSquareGroup(square: Square) {
-            squares.add(square)
-            addView(square)
-        }
-
-        private fun PointF.calculateCoordinate(col: Int) {
-            x = if (col == 0) 0f else col * cellWidth
-            y = 0f
-        }
-
-        private fun right(col: Int): Float {
-            return (col + 1) * cellWidth
-        }
-
-        private fun bottom(): Float {
-            return cellWidth
-        }
-
-        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-            super.onSizeChanged(w, h, oldw, oldh)
-            cellWidth = listener.squareGroupWidth() / listener.getColumnCount()
-            translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, cellWidth / 10)
-            translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -(cellWidth / 10))
-            animatorRight = ObjectAnimator.ofPropertyValuesHolder(
-                this, translateRight
-            ).apply {
-                repeatMode = ObjectAnimator.REVERSE
-                repeatCount = 1
-                duration = 30
-            }
-
-            animatorLeft = ObjectAnimator.ofPropertyValuesHolder(this, translateLeft).apply {
-                repeatMode = ObjectAnimator.REVERSE
-                repeatCount = 1
-                duration = 30
-            }
-
-            animSet = AnimatorSet().apply {
-                playSequentially(animatorRight, animatorLeft)
-            }
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-        }
-
-        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-            for ((i, s) in squares.withIndex()) {
-                point.calculateCoordinate(i)
-                s.layout(
-                    point.x.roundToInt(), point.y.roundToInt(), right(i).roundToInt(), bottom()
-                        .roundToInt()
-                )
-            }
-        }
-
-        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            setMeasuredDimension(
-                (listener.squareGroupWidth()).roundToInt(), (listener.squareGroupHeight()).roundToInt()
-            )
-        }
-
-        fun animateSquareGroup() {
-            animSet.apply {
-                end()
-                start()
-            }
-        }
     }
 
-    private class Square(
+    class Square(
         context: Context, char: Char = '\u0000',
         private val listener: MotherBoardInterface
     ) : View(context) {
@@ -375,8 +326,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-            super.onSizeChanged(w, h, oldw, oldh)
-            cellWidth = listener.squareGroupWidth() / listener.getColumnCount()
+            cellWidth = w.toFloat()
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -444,14 +394,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         fun squareWidth(): Float {
-            return 0.0f
-        }
-
-        fun squareGroupWidth(): Float {
-            return 0.0f
-        }
-
-        fun squareGroupHeight(): Float {
             return 0.0f
         }
 
