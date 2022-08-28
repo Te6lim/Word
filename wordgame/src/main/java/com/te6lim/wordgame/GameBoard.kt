@@ -112,15 +112,16 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         return (r * attrCol) + col
     }
 
-    private fun removeViewInRow(r: Int) {
-        for (c in 0 until attrCol) {
-            removeViewAt(pos(r, c))
+    private fun removeViews(squares: List<Square>) {
+        for (c in squares) {
+            removeView(c)
         }
     }
 
     private fun addViews(list: ArrayList<Square>, r: Int) {
         for (c in 0 until attrCol) {
-            addView(list[c], pos(r, c))
+            val p = pos(r, c)
+            addView(list[c], p)
         }
     }
 
@@ -133,7 +134,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private fun setNewSquaresInRow(index: Int, guessInfo: WordGame.GuessInfo?) {
         val group: ArrayList<Square> = newSquareGroup(guessInfo)
         if (index < squareGroups.size && guessInfo != null) {
-            removeViewInRow(index)
+            removeViews(squareGroups[index])
             squareGroups[index] = group
             addViews(squareGroups[index], index)
         } else {
