@@ -52,19 +52,34 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, gap)
     private val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -gap)
 
-    private fun ArrayList<Square>.animateRow(): AnimatorSet {
-        val list = arrayListOf<AnimatorSet>()
+    private var animList: List<List<AnimatorSet>>
 
-        for (i in 0 until size) {
+    private fun ArrayList<ArrayList<Square>>.animateRow(): List<List<AnimatorSet>> {
+        val list = arrayListOf<ArrayList<AnimatorSet>>()
+
+        for (r in 0 until attrRow) {
+            list.add(arrayListOf())
+            for (c in 0 until attrCol) {
+                list[r].add(AnimatorSet().apply {
+                    playSequentially(
+                        getTranslateRight(c, this@animateRow[r]), getTranslateLeft(c, this@animateRow[r])
+                    )
+                })
+            }
+        }
+        return list
+    }
+
+    private var animGroup: List<AnimatorSet>
+
+    private fun getAnimGroup(): List<AnimatorSet> {
+        val list = arrayListOf<AnimatorSet>()
+        for (r in 0 until attrRow) {
             list.add(AnimatorSet().apply {
-                playSequentially(
-                    getTranslateRight(i, this@animateRow), getTranslateLeft(i, this@animateRow)
-                )
+                playTogether(*animList[r].toTypedArray())
             })
         }
-        return AnimatorSet().apply {
-            playTogether(*list.toTypedArray())
-        }
+        return list
     }
 
     private fun getTranslateRight(position: Int, list: ArrayList<Square>): ObjectAnimator {
@@ -85,6 +100,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     init {
         generateLetters()
+        animList = squareGroups.animateRow()
+        animGroup = getAnimGroup()
     }
 
     fun setUpWithWordGame(g: WordGame) {
@@ -263,9 +280,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 }
 
                 GuessFlag.INCOMPLETE -> {
-                    with(squareGroups[it.trial].animateRow()) {
+                    animGroup[it.trial].apply {
                         end()
                         start()
+                        return@let
                     }
                 }
 
@@ -281,10 +299,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {}
-
-    private fun animateGroup() {
-
-    }
 
     class Square(
         context: Context, char: Char = '\u0000',
