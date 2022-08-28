@@ -24,7 +24,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     private var cellWidth = 0.0f
-    private val gap = resources.getDimension(R.dimen.gap)
+    private val gap = resources.displayMetrics.density * 4f
 
 
     private val attrRow = attributeArray.getInt(R.styleable.GameBoard_row, 1)
@@ -49,58 +49,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var guessFlag = GuessFlag.INCORRECT
 
-    private val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, gap)
-    private val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -gap)
-
     private var animList: List<List<AnimatorSet>>
-
-    private fun ArrayList<ArrayList<Square>>.animateRow(): List<List<AnimatorSet>> {
-        val list = arrayListOf<ArrayList<AnimatorSet>>()
-
-        for (r in 0 until attrRow) {
-            list.add(arrayListOf())
-            for (c in 0 until attrCol) {
-                list[r].add(AnimatorSet().apply {
-                    playSequentially(
-                        getTranslateRight(c, this@animateRow[r]), getTranslateLeft(c, this@animateRow[r])
-                    )
-                })
-            }
-        }
-        return list
-    }
-
     private var animGroup: List<AnimatorSet>
-
-    private fun getAnimGroup(): List<AnimatorSet> {
-        val list = arrayListOf<AnimatorSet>()
-        for (r in 0 until attrRow) {
-            list.add(AnimatorSet().apply {
-                playTogether(*animList[r].toTypedArray())
-            })
-        }
-        return list
-    }
-
-    private fun getTranslateRight(position: Int, list: ArrayList<Square>): ObjectAnimator {
-        return ObjectAnimator.ofPropertyValuesHolder(list[position], translateRight).apply {
-            duration = 30
-            repeatCount = 1
-            repeatMode = ObjectAnimator.REVERSE
-        }
-    }
-
-    private fun getTranslateLeft(position: Int, list: ArrayList<Square>): ObjectAnimator {
-        return ObjectAnimator.ofPropertyValuesHolder(list[position], translateLeft).apply {
-            duration = 30
-            repeatCount = 1
-            repeatMode = ObjectAnimator.REVERSE
-        }
-    }
 
     init {
         generateLetters()
-        animList = squareGroups.animateRow()
+        animList = squareGroups.buildAnimations()
         animGroup = getAnimGroup()
     }
 
@@ -162,16 +116,16 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 return guessInfo
             }
 
-            override fun squareWidth(): Float {
-                return cellWidth
-            }
-
             override fun getRowCount(): Int {
                 return attrRow
             }
 
             override fun getColumnCount(): Int {
                 return attrCol
+            }
+
+            override fun gap(): Float {
+                return gap
             }
 
             override fun getColor(type: ColorType): Int {
@@ -301,6 +255,33 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {}
 
+    private fun ArrayList<ArrayList<Square>>.buildAnimations(): List<List<AnimatorSet>> {
+        val list = arrayListOf<ArrayList<AnimatorSet>>()
+
+        for (r in 0 until attrRow) {
+            list.add(arrayListOf())
+            for (c in 0 until attrCol) {
+                list[r].add(AnimatorSet().apply {
+                    playSequentially(
+                        this@buildAnimations[r][c].getTranslateRight(),
+                        this@buildAnimations[r][c].getTranslateLeft()
+                    )
+                })
+            }
+        }
+        return list
+    }
+
+    private fun getAnimGroup(): List<AnimatorSet> {
+        val list = arrayListOf<AnimatorSet>()
+        for (r in 0 until attrRow) {
+            list.add(AnimatorSet().apply {
+                playTogether(*animList[r].toTypedArray())
+            })
+        }
+        return list
+    }
+
     class Square(
         context: Context, char: Char = '\u0000',
         private val listener: MotherBoardInterface
@@ -317,9 +298,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         private var textColorWhite = Color.rgb(255, 255, 255)
         private var textColorBlack = Color.rgb(0, 0, 0)
 
-        private val density = resources.displayMetrics.density
-
-        private val stroke = density * 2
+        private val stroke = resources.displayMetrics.density * 2
 
         private var cellWidth = 0.0f
 
@@ -328,6 +307,30 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             style = Paint.Style.STROKE
             strokeWidth = stroke
             isAntiAlias = true
+        }
+
+        private val popAnimSet: AnimatorSet
+
+        init {
+            popAnimSet = AnimatorSet().apply {
+                playTogether(getPopAnimX(), getPopAnimY())
+            }
+        }
+
+        private fun getPopAnimX() = ObjectAnimator.ofPropertyValuesHolder(
+            this, PropertyValuesHolder.ofFloat(SCALE_X, 1.3f)
+        ).apply {
+            duration = 20
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = 1
+        }
+
+        private fun getPopAnimY() = ObjectAnimator.ofPropertyValuesHolder(
+            this, PropertyValuesHolder.ofFloat(SCALE_Y, 1.3f)
+        ).apply {
+            duration = 20
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = 1
         }
 
 
@@ -374,7 +377,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                         )
                     } else {
                         paint.style = Paint.Style.STROKE
-                        paint.color = listener.getColor(ColorType.FRAME)
+                        paint.color = if (letter == '\u0000') listener.getColor(ColorType.FRAME)
+                        else listener.getColor(ColorType.WRONG)
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
@@ -391,7 +395,31 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 typeface = Typeface.create("", Typeface.BOLD)
             }
             canvas.drawText(letter.toString(), point.x, point.y, paint)
+
+            popAnimSet.apply {
+                end()
+                start()
+            }
         }
+
+        fun getTranslateRight(): ObjectAnimator {
+            val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, listener.gap())
+            return ObjectAnimator.ofPropertyValuesHolder(this, translateRight).apply {
+                duration = 30
+                repeatCount = 1
+                repeatMode = ObjectAnimator.REVERSE
+            }
+        }
+
+        fun getTranslateLeft(): ObjectAnimator {
+            val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -listener.gap())
+            return ObjectAnimator.ofPropertyValuesHolder(this, translateLeft).apply {
+                duration = 30
+                repeatCount = 1
+                repeatMode = ObjectAnimator.REVERSE
+            }
+        }
+
     }
 
     interface MotherBoardInterface {
@@ -408,16 +436,16 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             return null
         }
 
-        fun squareWidth(): Float {
-            return 0.0f
-        }
-
         fun getColor(type: ColorType): Int {
             return Color.rgb(0, 0, 0)
         }
 
         fun submittedStatus(): Boolean {
             return false
+        }
+
+        fun gap(): Float {
+            return 0f
         }
     }
 }
