@@ -52,6 +52,11 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var animList: List<List<AnimatorSet>>
     private var animGroup: List<AnimatorSet>
 
+    private var drawCount: Int = 0
+        set(value) {
+            field = value % (attrCol - 1)
+        }
+
     init {
         generateLetters()
         animList = squareGroups.buildAnimations()
@@ -126,6 +131,15 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
             override fun gap(): Float {
                 return gap
+            }
+
+            override fun incrementOrChangeDrawCount(value: Int) {
+                if (value != 0) ++drawCount
+                else drawCount = value
+            }
+
+            override fun drawCount(): Int {
+                return drawCount
             }
 
             override fun getColor(type: ColorType): Int {
@@ -318,7 +332,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         private fun getPopAnimX() = ObjectAnimator.ofPropertyValuesHolder(
-            this, PropertyValuesHolder.ofFloat(SCALE_X, 1.3f)
+            this, PropertyValuesHolder.ofFloat(SCALE_X, 1.2f)
         ).apply {
             duration = 20
             repeatMode = ObjectAnimator.REVERSE
@@ -326,7 +340,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         private fun getPopAnimY() = ObjectAnimator.ofPropertyValuesHolder(
-            this, PropertyValuesHolder.ofFloat(SCALE_Y, 1.3f)
+            this, PropertyValuesHolder.ofFloat(SCALE_Y, 1.2f)
         ).apply {
             duration = 20
             repeatMode = ObjectAnimator.REVERSE
@@ -348,6 +362,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onDraw(canvas: Canvas) {
+            if (listener.drawCount() == 0) listener.getInfo()?.resetUnselectedCharacters()
+            listener.incrementOrChangeDrawCount()
             paint.apply {
                 style = Paint.Style.STROKE
                 paint.style = Paint.Style.STROKE
@@ -386,6 +402,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 }
             }
             listener.getInfo()?.unUsedCharacters?.remove(letter)
+
             point.calculateTextPosition()
             paint.apply {
                 color = if (listener.submittedStatus()) textColorWhite else textColorBlack
@@ -447,5 +464,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         fun gap(): Float {
             return 0f
         }
+
+        fun incrementOrChangeDrawCount(value: Int = 0)
+
+        fun drawCount(): Int
     }
 }

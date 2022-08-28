@@ -10,7 +10,7 @@ class WordGame(private val source: WordSource? = null) {
 
     private var t = 0
 
-    private var word: String = "SHIRE"
+    private var word: String = "GLOVE"
         set(value) {
             field = value.uppercase()
         }
@@ -65,9 +65,12 @@ class WordGame(private val source: WordSource? = null) {
             if (guess.isNotEmpty()) {
                 misplacedCharacters = misplacedCharacters()
                 wrongCharacters = wrongCharacters()
-
-                for (c in word) unUsedCharacters.add(c)
+                resetUnselectedCharacters()
             }
+        }
+
+        fun resetUnselectedCharacters() {
+            for (c in word) unUsedCharacters.add(c)
         }
 
         private fun misplacedCharacters(): List<Char> {
