@@ -19,15 +19,13 @@ class MainActivity : AppCompatActivity() {
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
 
         gameBoard.setOnGuessSubmittedListener(object : GameBoard.SubmitListener {
-            override fun onSubmit(
-                correctChar: List<Char>, misplacedChars: List<Char>, wrongChar: List<Char>
-            ) {
+            override fun onSubmit(misplacedChars: List<Char>, wrongChar: List<Char>) {
                 with(keyBoard.gameBoardAdapter) {
-                    paintKeys(correctChar, GameBoardAdapter.GuessState.CORRECT)
-                    paintKeys(misplacedChars, GameBoardAdapter.GuessState.MISPLACED)
                     paintKeys(wrongChar, GameBoardAdapter.GuessState.WRONG)
+                    paintKeys(misplacedChars, GameBoardAdapter.GuessState.MISPLACED)
                 }
             }
+
         })
 
         keyBoard.setOnKeyClickListener(object : KeyBoardView.OnKeyClickListener {
@@ -48,6 +46,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-
     }
 }

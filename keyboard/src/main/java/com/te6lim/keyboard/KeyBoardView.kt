@@ -39,7 +39,6 @@ class KeyBoardView @JvmOverloads constructor(
 
     private val point = PointF(0f, 0f)
 
-    private val keyColor = Color.rgb(211, 214, 219)
     private val clickColor = Color.rgb(120, 124, 127)
 
     val gameBoardAdapter = object : GameBoardAdapter {
@@ -50,8 +49,7 @@ class KeyBoardView @JvmOverloads constructor(
                         topKeys.find {
                             it.char == c.toString()
                         }?.apply {
-                            keyColorValue = getColorOfState(state)
-                            invalidate()
+                            setKeyAnimator(getColorOfState(state))
                         }
                     }
 
@@ -59,8 +57,7 @@ class KeyBoardView @JvmOverloads constructor(
                         middleKeys.find {
                             it.char == c.toString()
                         }?.apply {
-                            keyColorValue = getColorOfState(state)
-                            invalidate()
+                            setKeyAnimator(getColorOfState(state))
                         }
                     }
 
@@ -68,8 +65,7 @@ class KeyBoardView @JvmOverloads constructor(
                         bottomKeys.find {
                             it.char == c.toString()
                         }?.apply {
-                            keyColorValue = getColorOfState(state)
-                            invalidate()
+                            setKeyAnimator(getColorOfState(state))
                         }
                     }
                 }
@@ -217,12 +213,33 @@ class KeyBoardView @JvmOverloads constructor(
 
         internal var clickListener: OnKeyClickListener? = null
 
-        var keyColorValue = keyColor
-
         private var topValueForLargeRect = 0f
+
+        private var kColor = Color.rgb(211, 214, 219)
+            set(value) {
+                field = value
+                invalidate()
+            }
 
         init {
             isClickable = true
+        }
+
+        fun setKeyAnimator(color: Int) {
+            kColor = color
+            animator = ValueAnimator.ofArgb(color, clickColor).apply {
+                duration = 80
+                addUpdateListener {
+                    kColor = it.animatedValue as Int
+                }
+            }
+        }
+
+        private var animator = ValueAnimator.ofArgb(kColor, clickColor).apply {
+            duration = 80
+            addUpdateListener {
+                kColor = it.animatedValue as Int
+            }
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -238,7 +255,7 @@ class KeyBoardView @JvmOverloads constructor(
         }
 
         override fun onDraw(canvas: Canvas) {
-            paint.color = keyColorValue
+            paint.color = kColor
             if (!isEnterKeyOrDelete()) {
                 canvas.drawRoundRect(
                     gap, gap, keyWidth - gap, keyHeight - gap, corner, corner, paint
@@ -279,14 +296,6 @@ class KeyBoardView @JvmOverloads constructor(
                 else clickListener?.onClick(SpecialKeys.DELETE)
             }
             return true
-        }
-
-        private val animator = ValueAnimator.ofArgb(keyColor, clickColor).apply {
-            duration = 80
-            addUpdateListener {
-                keyColorValue = it.animatedValue as Int
-                invalidate()
-            }
         }
 
         override fun onTouchEvent(event: MotionEvent?): Boolean {

@@ -177,9 +177,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     fun setCharacter(char: Char) {
-        game?.addLetter(char)
         submitted = false
         if (turn in 0 until MAX_TRIAL && charPosition in 0 until WORD_LENGTH) {
+            game?.addLetter(char)
             squareGroups[turn][charPosition++].letter = char
         }
     }
@@ -203,10 +203,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 GuessFlag.INCORRECT -> {
                     charPosition = 0
                     turn = it.trial + 1
-                    submitListener?.onSubmit(
-                        if (it.isCorrect()) it.guessWord.toList() else listOf(),
-                        it.misplacedCharacters, it.wrongCharacters
-                    )
+                    submitListener?.onSubmit(it.misplacedCharacters, it.wrongCharacters)
                     setNewSquaresInRow(it.trial, it)
                     if (it.isCorrect()) {
                         guessFlag = GuessFlag.CORRECT
@@ -412,13 +409,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     interface MotherBoardInterface {
-
         fun getInfo(): WordGame.GuessInfo? {
             return null
         }
     }
 
     interface SubmitListener {
-        fun onSubmit(correctChar: List<Char>, misplacedChars: List<Char>, wrongChar: List<Char>)
+        fun onSubmit(misplacedChars: List<Char>, wrongChar: List<Char>)
     }
 }
