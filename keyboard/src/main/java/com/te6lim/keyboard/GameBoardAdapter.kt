@@ -1,20 +1,16 @@
 package com.te6lim.keyboard
 
-import android.graphics.Color
-
-interface GameBoardAdapter {
+abstract class GameBoardAdapter {
 
     enum class GuessState {
         MISPLACED, WRONG
     }
 
-    val colorWrong: Int
-        get() = Color.rgb(120, 124, 127)
+    var colorWrong: Int? = null
 
-    val colorMisplaced: Int
-        get() = Color.rgb(201, 180, 87)
+    var colorMisplaced: Int? = null
 
-    fun paintKeys(letters: List<Char>, state: GuessState)
+    abstract fun paintKeys(letters: List<Char>, state: GuessState)
 
     fun highlightKeys(misplaced: List<Char>, wrong: List<Char>) {
         paintKeys(wrong, GuessState.WRONG)

@@ -17,6 +17,10 @@ class MainActivity : AppCompatActivity() {
         gameBoard.setUpWithWordGame(wordGame)
 
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
+        with(keyBoard.gameBoardAdapter) {
+            colorMisplaced = gameBoard.misplacedColor
+            colorWrong = gameBoard.wrongColor
+        }
 
         gameBoard.setOnGuessSubmittedListener(object : GameBoard.SubmitListener {
 

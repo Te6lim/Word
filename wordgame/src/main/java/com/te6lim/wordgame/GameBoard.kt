@@ -28,9 +28,14 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private val point = PointF(0f, 0f)
 
-    private var correctColor = Color.rgb(107, 170, 100)
-    private var misplacedColor = Color.rgb(201, 180, 87)
-    private var wrongColor = Color.rgb(120, 124, 127)
+    var correctColor = Color.rgb(107, 170, 100)
+        private set
+
+    var misplacedColor = Color.rgb(201, 180, 87)
+        private set
+
+    var wrongColor = Color.rgb(120, 124, 127)
+        private set
 
     private var frameColor = Color.rgb(206, 206, 206)
 

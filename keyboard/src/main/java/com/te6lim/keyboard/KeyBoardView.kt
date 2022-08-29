@@ -19,7 +19,7 @@ class KeyBoardView @JvmOverloads constructor(
         TOP, MIDDLE, BOTTOM
     }
 
-    enum class SpecialKeys() {
+    enum class SpecialKeys {
         ENTER, DELETE
     }
 
@@ -41,7 +41,7 @@ class KeyBoardView @JvmOverloads constructor(
 
     private val clickColor = Color.rgb(120, 124, 127)
 
-    val gameBoardAdapter = object : GameBoardAdapter {
+    val gameBoardAdapter = object : GameBoardAdapter() {
         override fun paintKeys(letters: List<Char>, state: GameBoardAdapter.GuessState) {
             for (c in letters) {
                 when (getKeyType(c)) {
@@ -49,7 +49,7 @@ class KeyBoardView @JvmOverloads constructor(
                         topKeys.find {
                             it.char == c.toString()
                         }?.apply {
-                            setKeyAnimator(getColorOfState(state))
+                            getColorOfState(state)?.let { setKeyAnimator(it) }
                         }
                     }
 
@@ -57,7 +57,7 @@ class KeyBoardView @JvmOverloads constructor(
                         middleKeys.find {
                             it.char == c.toString()
                         }?.apply {
-                            setKeyAnimator(getColorOfState(state))
+                            getColorOfState(state)?.let { setKeyAnimator(it) }
                         }
                     }
 
@@ -65,7 +65,7 @@ class KeyBoardView @JvmOverloads constructor(
                         bottomKeys.find {
                             it.char == c.toString()
                         }?.apply {
-                            setKeyAnimator(getColorOfState(state))
+                            getColorOfState(state)?.let { setKeyAnimator(it) }
                         }
                     }
                 }
