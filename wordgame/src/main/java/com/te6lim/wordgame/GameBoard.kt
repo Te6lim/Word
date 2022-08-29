@@ -55,7 +55,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var drawCount: Int = 0
         set(value) {
-            field = value % (attrCol - 1)
+            field = value % (attrCol)
         }
 
     init {
@@ -336,8 +336,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         override fun onDraw(canvas: Canvas) {
-            if (drawCount == 0) listener.getInfo()?.resetUnselectedCharacters()
-            ++drawCount
             paint.apply {
                 style = Paint.Style.STROKE
                 paint.style = Paint.Style.STROKE
@@ -391,6 +389,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 end()
                 start()
             }
+            ++drawCount
+            if (drawCount == 0)
+                listener.getInfo()?.resetUnselectedCharacters()
         }
 
         fun getTranslateRight(): ObjectAnimator {
