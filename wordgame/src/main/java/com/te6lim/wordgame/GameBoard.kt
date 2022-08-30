@@ -2,6 +2,7 @@ package com.te6lim.wordgame
 
 import android.animation.*
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
@@ -38,6 +39,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         private set
 
     private var frameColor = Color.rgb(206, 206, 206)
+    private var highlightFrame = Color.rgb(206, 206, 206)
 
     private var charPosition = 0
     private var turn = 0
@@ -58,13 +60,29 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             field = value % (attrCol)
         }
 
+    private val themeMode = resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)
+
     init {
+        when (themeMode) {
+            Configuration.UI_MODE_NIGHT_YES -> {
+                frameColor = wrongColor
+                highlightFrame = Color.rgb(206, 206, 206)
+            }
+            Configuration.UI_MODE_NIGHT_NO -> {
+                Color.rgb(206, 206, 206)
+                highlightFrame = wrongColor
+            }
+            else -> {
+                Color.rgb(206, 206, 206)
+                highlightFrame = Color.rgb(206, 206, 206)
+            }
+        }
         generateLetters()
         animList = squareGroups.buildAnimations()
         animGroup = getAnimGroup()
     }
 
-    fun setUpWithWordGame(g: WordGame) {
+    fun setUpWithBoard(g: WordGame) {
         game = g
     }
 
@@ -283,9 +301,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         private val point = PointF(0f, 0f)
 
-        private var textColorWhite = Color.rgb(255, 255, 255)
-        private var textColorBlack = Color.rgb(0, 0, 0)
-
+        private var textColorSubmitted = Color.rgb(255, 255, 255)
+        private var textColor = when (themeMode) {
+            Configuration.UI_MODE_NIGHT_YES -> highlightFrame
+            Configuration.UI_MODE_NIGHT_NO -> Color.rgb(0, 0, 0)
+            else -> Color.rgb(0, 0, 0)
+        }
         private val stroke = resources.displayMetrics.density * 2
 
         private var cellWidth = 0.0f
@@ -366,7 +387,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                     } else {
                         paint.style = Paint.Style.STROKE
                         paint.color = if (letter == '\u0000') frameColor
-                        else wrongColor
+                        else highlightFrame
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
@@ -377,7 +398,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
             point.calculateTextPosition()
             paint.apply {
-                color = if (submitted) textColorWhite else textColorBlack
+                color = if (submitted) textColorSubmitted else textColor
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
                 textSize = cellWidth / 2f
@@ -395,7 +416,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         fun getTranslateRight(): ObjectAnimator {
-            val translateRight = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, gap)
+            val translateRight = PropertyValuesHolder.ofFloat(TRANSLATION_X, gap)
             return ObjectAnimator.ofPropertyValuesHolder(this, translateRight).apply {
                 duration = 30
                 repeatCount = 1
@@ -404,7 +425,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
 
         fun getTranslateLeft(): ObjectAnimator {
-            val translateLeft = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, -gap)
+            val translateLeft = PropertyValuesHolder.ofFloat(TRANSLATION_X, -gap)
             return ObjectAnimator.ofPropertyValuesHolder(this, translateLeft).apply {
                 duration = 30
                 repeatCount = 1

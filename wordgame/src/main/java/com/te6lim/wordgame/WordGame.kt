@@ -10,7 +10,7 @@ class WordGame(private val source: WordSource? = null) {
 
     private var t = 0
 
-    private var word: String = "CRAMP"
+    private var word: String = "CLAMP"
         set(value) {
             field = value.uppercase()
         }

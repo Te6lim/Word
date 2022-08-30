@@ -14,9 +14,10 @@ class MainActivity : AppCompatActivity() {
         val wordGame = WordGame()
         val gameBoard = findViewById<GameBoard>(R.id.gameBoard)
 
-        gameBoard.setUpWithWordGame(wordGame)
+        gameBoard.setUpWithBoard(wordGame)
 
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
+
         with(keyBoard.gameBoardAdapter) {
             colorMisplaced = gameBoard.misplacedColor
             colorWrong = gameBoard.wrongColor
