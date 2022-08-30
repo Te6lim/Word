@@ -49,11 +49,17 @@ class WordGame(private val source: WordSource? = null) {
         return null
     }
 
+    internal fun generateStats() {
+
+    }
+
     open inner class GuessInfo internal constructor(guess: String, t: Int) {
 
         internal var misplacedCharacters = listOf<Char>()
 
         internal var wrongCharacters = listOf<Char>()
+
+        internal var correctCharacters = listOf<Char>()
 
         internal val trial = t
 
@@ -65,12 +71,23 @@ class WordGame(private val source: WordSource? = null) {
             if (guess.isNotEmpty()) {
                 misplacedCharacters = misplacedCharacters()
                 wrongCharacters = wrongCharacters()
+                correctCharacters = correctCharacters()
                 resetUnselectedCharacters()
             }
         }
 
         fun resetUnselectedCharacters() {
             for (c in word) unUsedCharacters.add(c)
+        }
+
+        private fun correctCharacters(): List<Char> {
+            val characters = mutableListOf<Char>()
+            val wordArray = arrayListOf<Char>()
+            for (c in word) wordArray.add(c)
+            for ((i, c) in guessWord.withIndex()) {
+                if (c == wordArray[i]) characters.add(c)
+            }
+            return characters
         }
 
         private fun misplacedCharacters(): List<Char> {
@@ -110,7 +127,8 @@ class WordGame(private val source: WordSource? = null) {
         }
 
         internal fun isRight(char: Char): Boolean {
-            return !this.isMisplaced(char.uppercaseChar()) && !this.isWrong(char.uppercaseChar())
+            if (correctCharacters.contains(char.uppercaseChar())) return true
+            return false
         }
 
         internal fun isCorrect(): Boolean {

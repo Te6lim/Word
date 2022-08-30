@@ -226,7 +226,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 GuessFlag.INCORRECT -> {
                     charPosition = 0
                     turn = it.trial + 1
-                    submitListener?.onSubmit(it.misplacedCharacters, it.wrongCharacters)
+                    submitListener?.onSubmit(it.correctCharacters, it.misplacedCharacters, it.wrongCharacters)
                     setNewSquaresInRow(it.trial, it)
                     if (it.isCorrect()) {
                         guessFlag = GuessFlag.CORRECT
@@ -442,6 +442,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     interface SubmitListener {
-        fun onSubmit(misplacedChars: List<Char>, wrongChar: List<Char>)
+        fun onSubmit(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>)
     }
 }

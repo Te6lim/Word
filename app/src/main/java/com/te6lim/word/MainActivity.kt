@@ -19,14 +19,15 @@ class MainActivity : AppCompatActivity() {
         val keyBoard = findViewById<KeyBoardView>(R.id.gameKeyboard)
 
         with(keyBoard.gameBoardAdapter) {
+            colorCorrect = gameBoard.correctColor
             colorMisplaced = gameBoard.misplacedColor
             colorWrong = gameBoard.wrongColor
         }
 
         gameBoard.setOnGuessSubmittedListener(object : GameBoard.SubmitListener {
 
-            override fun onSubmit(misplacedChars: List<Char>, wrongChar: List<Char>) {
-                keyBoard.gameBoardAdapter.highlightKeys(misplacedChars, wrongChar)
+            override fun onSubmit(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>) {
+                keyBoard.gameBoardAdapter.highlightKeys(correct, misplaced, wrong)
             }
 
         })
