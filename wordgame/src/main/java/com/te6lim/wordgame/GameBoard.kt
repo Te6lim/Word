@@ -226,7 +226,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 GuessFlag.INCORRECT -> {
                     charPosition = 0
                     turn = it.trial + 1
-                    submitListener?.onSubmit(it.correctCharacters, it.misplacedCharacters, it.wrongCharacters)
+                    submitListener?.onGuessSubmitted(
+                        it.correctCharacters, it.misplacedCharacters, it.wrongCharacters
+                    )
                     setNewSquaresInRow(it.trial, it)
                     if (it.isCorrect()) {
                         guessFlag = GuessFlag.CORRECT
@@ -411,8 +413,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 start()
             }
             ++drawCount
-            if (drawCount == 0)
-                listener.getInfo()?.resetUnselectedCharacters()
+            if (drawCount == 0 && submitted) listener.getInfo()?.resetUnselectedCharacters()
         }
 
         fun getTranslateRight(): ObjectAnimator {
@@ -442,6 +443,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     interface SubmitListener {
-        fun onSubmit(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>)
+        fun onGuessSubmitted(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>)
     }
 }

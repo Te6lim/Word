@@ -85,7 +85,10 @@ class WordGame(private val source: WordSource? = null) {
             val wordArray = arrayListOf<Char>()
             for (c in word) wordArray.add(c)
             for ((i, c) in guessWord.withIndex()) {
-                if (c == wordArray[i]) characters.add(c)
+                if (c == wordArray[i]) {
+                    characters.add(c)
+                    wordArray[i] = '\u0000'
+                }
             }
             return characters
         }
@@ -97,7 +100,7 @@ class WordGame(private val source: WordSource? = null) {
             for ((i, c) in guessWord.withIndex()) {
                 if (c != wordArray[i] && wordArray.contains(c)) {
                     characters.add(c)
-                    wordArray[i] = '\u0000'
+                    wordArray[wordArray.indexOf(c)] = '\u0000'
                 }
             }
             return characters
@@ -127,8 +130,7 @@ class WordGame(private val source: WordSource? = null) {
         }
 
         internal fun isRight(char: Char): Boolean {
-            if (correctCharacters.contains(char.uppercaseChar())) return true
-            return false
+            return correctCharacters.contains(char.uppercaseChar())
         }
 
         internal fun isCorrect(): Boolean {

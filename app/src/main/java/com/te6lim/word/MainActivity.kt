@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
 
         gameBoard.setOnGuessSubmittedListener(object : GameBoard.SubmitListener {
 
-            override fun onSubmit(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>) {
+            override fun onGuessSubmitted(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>) {
                 keyBoard.gameBoardAdapter.highlightKeys(correct, misplaced, wrong)
             }
 
