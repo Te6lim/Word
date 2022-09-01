@@ -2,6 +2,6 @@
 Its basically the popular Wordle game, but this one's my original implementation, with custom UI components
 # Work In Progress
 
-https://user-images.githubusercontent.com/57777459/187653649-36391b8c-e52a-43ad-ae4b-f9cdf5e512b8.mp4
+https://user-images.githubusercontent.com/57777459/187905400-67de5821-81cc-4213-9c89-c3711219de9c.mp4
 
-<img src="https://user-images.githubusercontent.com/57777459/187653673-94b218f8-6529-4fe2-b628-60120b605275.jpg" width="240" height="533"/>
+<img src="https://user-images.githubusercontent.com/57777459/187905415-e868c342-bb44-46df-acd0-ee0c4806847c.jpg" width="240" height="533"/>
