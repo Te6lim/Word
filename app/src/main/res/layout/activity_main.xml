@@ -7,28 +7,12 @@
     android:layout_gravity="center"
     tools:context=".MainActivity">
 
-    <com.te6lim.wordgame.GameBoard
-        android:id="@+id/gameBoard"
+    <fragment
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="32dp"
-        app:col="5"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:row="6" />
-
-    <com.te6lim.keyboard.KeyBoardView
-        android:id="@+id/gameKeyboard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="4dp"
-        android:layout_marginBottom="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:id="@+id/mainFragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_height="match_parent"
+        app:defaultNavHost="true"
+        app:navGraph="@navigation/navgraph" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
