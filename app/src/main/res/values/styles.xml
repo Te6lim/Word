@@ -6,4 +6,9 @@
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/primaryTextColor</item>
     </style>
+
+    <style name="settings_item_title_style">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+    </style>
 </resources>

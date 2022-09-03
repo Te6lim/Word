@@ -30,7 +30,7 @@ class GameFragment : Fragment() {
                     R.id.profile -> {
                         true
                     }
-                    R.id.settings -> {
+                    R.id.settings_screen -> {
                         true
                     }
                     R.id.help -> {
