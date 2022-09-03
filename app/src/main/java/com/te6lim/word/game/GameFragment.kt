@@ -1,9 +1,8 @@
 package com.te6lim.word.game
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.te6lim.keyboard.KeyBoardView
@@ -20,6 +19,28 @@ class GameFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_game, container, false)
+
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.game_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.profile -> {
+                        true
+                    }
+                    R.id.settings -> {
+                        true
+                    }
+                    R.id.help -> {
+                        true
+                    }
+                    else -> return false
+                }
+            }
+
+        })
 
         val wordGame = WordGame()
         val gameBoard = binding.gameBoard

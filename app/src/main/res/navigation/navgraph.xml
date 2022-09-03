@@ -8,6 +8,5 @@
     <fragment
         android:id="@+id/gameFragment"
         android:name="com.te6lim.word.game.GameFragment"
-        android:label="fragment_game"
         tools:layout="@layout/fragment_game" />
 </navigation>
