@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.word.R
 import com.te6lim.word.databinding.FragmentGameBinding
+import com.te6lim.word.settings.SettingsBottomSheet
 import com.te6lim.wordgame.GameBoard
 import com.te6lim.wordgame.WordGame
 
@@ -31,6 +32,10 @@ class GameFragment : Fragment() {
                         true
                     }
                     R.id.settings_screen -> {
+                        val settingsBottomSheet = SettingsBottomSheet()
+                        settingsBottomSheet.show(
+                            requireActivity().supportFragmentManager, SettingsBottomSheet.TAG
+                        )
                         true
                     }
                     R.id.help -> {
