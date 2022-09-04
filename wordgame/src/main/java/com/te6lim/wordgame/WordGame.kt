@@ -8,6 +8,10 @@ class WordGame(private val source: WordSource? = null) {
             private set
     }
 
+    enum class CharState {
+        IN_PLACE, OUT_OF_PLACE, WRONG
+    }
+
     private var t = 0
 
     private var word: String = "CLAMP"
@@ -53,7 +57,7 @@ class WordGame(private val source: WordSource? = null) {
 
     }
 
-    open inner class GuessInfo internal constructor(guess: String, t: Int) {
+    open inner class GuessInfo internal constructor(guess: String, t: Int) : GameBoard.WordState {
 
         internal var misplacedCharacters = listOf<Char>()
 
@@ -93,6 +97,14 @@ class WordGame(private val source: WordSource? = null) {
             return characters
         }
 
+        internal fun characterState(index: Int): CharState {
+            if (word[index] == guessWord[index] && correctCharacters.contains(guessWord[index]))
+                return CharState.IN_PLACE
+            if (correctCharacters.contains(guessWord[index])) return CharState.WRONG
+            if (misplacedCharacters.contains(guessWord[index])) return CharState.OUT_OF_PLACE
+            return CharState.WRONG
+        }
+
         private fun misplacedCharacters(): List<Char> {
             val characters = mutableListOf<Char>()
             val wordArray = arrayListOf<Char>()
@@ -119,22 +131,14 @@ class WordGame(private val source: WordSource? = null) {
             return characters
         }
 
-        internal fun isMisplaced(char: Char): Boolean {
-            if (misplacedCharacters.contains(char.uppercaseChar())) return true
-            return false
-        }
-
-        internal fun isWrong(char: Char): Boolean {
-            if (wrongCharacters.contains(char.uppercaseChar())) return true
-            return false
-        }
-
-        internal fun isRight(char: Char): Boolean {
-            return correctCharacters.contains(char.uppercaseChar())
-        }
-
         internal fun isCorrect(): Boolean {
             return guessWord.isNotEmpty() && misplacedCharacters.isEmpty() && wrongCharacters.isEmpty()
+        }
+
+        override fun getStateByPosition(p: Int, letter: Char): CharState {
+            if (letter == word[p]) return CharState.IN_PLACE
+            return if (word.contains(letter.uppercaseChar())) CharState.OUT_OF_PLACE
+            else CharState.WRONG
         }
     }
 }

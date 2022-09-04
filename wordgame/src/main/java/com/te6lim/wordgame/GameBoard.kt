@@ -55,11 +55,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private var animList: List<List<AnimatorSet>>
     private var animGroup: List<AnimatorSet>
 
-    private var drawCount: Int = 0
-        set(value) {
-            field = value % (attrCol)
-        }
-
     private val themeMode = resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)
 
     init {
@@ -129,13 +124,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private fun newSquareGroup(guessInfo: WordGame.GuessInfo?): ArrayList<Square> {
         val list = ArrayList<Square>()
-        for (i in 0 until attrCol)
-            list.add(newSquare(getCharForColumn(i, guessInfo), guessInfo))
+        for (i in 0 until attrCol) list.add(newSquare(getCharForColumn(i, guessInfo), i, guessInfo))
         return list
     }
 
-    private fun newSquare(letter: Char, guessInfo: WordGame.GuessInfo?): Square {
-        return Square(context, letter.uppercaseChar(), object : MotherBoardInterface {
+    private fun newSquare(letter: Char, column: Int, guessInfo: WordGame.GuessInfo?): Square {
+        return Square(context, letter.uppercaseChar(), column, object : MotherBoardInterface {
             override fun getInfo(): WordGame.GuessInfo? {
                 return guessInfo
             }
@@ -291,7 +285,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     }
 
     inner class Square(
-        context: Context, char: Char = '\u0000',
+        context: Context, char: Char = '\u0000', private val column: Int,
         private val listener: MotherBoardInterface
     ) : View(context) {
 
@@ -364,25 +358,26 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 paint.style = Paint.Style.STROKE
             }
 
-            if (listener.getInfo()?.isMisplaced(letter) == true) {
+            if (listener.getInfo()?.characterState(column) == WordGame.CharState.WRONG) {
                 paint.style = Paint.Style.FILL
-                paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                    misplacedColor else wrongColor
+                paint.color = wrongColor
                 canvas.drawRect(
                     stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                 )
             } else {
-                if (listener.getInfo()?.isRight(letter) == true) {
+
+                if (listener.getInfo()?.characterState(column) == WordGame.CharState.OUT_OF_PLACE) {
                     paint.style = Paint.Style.FILL
                     paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                        correctColor else wrongColor
+                        misplacedColor else wrongColor
                     canvas.drawRect(
                         stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                     )
                 } else {
-                    if (listener.getInfo()?.isWrong(letter) == true) {
+                    if (listener.getInfo()?.characterState(column) == WordGame.CharState.IN_PLACE) {
                         paint.style = Paint.Style.FILL
-                        paint.color = wrongColor
+                        paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
+                            correctColor else wrongColor
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
@@ -395,8 +390,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                         )
                     }
                 }
+
             }
-            listener.getInfo()?.unUsedCharacters?.remove(letter)
 
             point.calculateTextPosition()
             paint.apply {
@@ -412,8 +407,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 end()
                 start()
             }
-            ++drawCount
-            if (drawCount == 0 && submitted) listener.getInfo()?.resetUnselectedCharacters()
         }
 
         fun getTranslateRight(): ObjectAnimator {
@@ -434,6 +427,10 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             }
         }
 
+    }
+
+    interface WordState {
+        fun getStateByPosition(p: Int, letter: Char): WordGame.CharState
     }
 
     interface MotherBoardInterface {
