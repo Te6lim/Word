@@ -7,11 +7,14 @@
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/drawable/ic_help.xml" value="0.240625" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/drawable/ic_profile.xml" value="0.240625" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/drawable/ic_settings.xml" value="0.240625" />
+        <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/drawable/misplaced_square_background.xml" value="0.240625" />
+        <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/drawable/square_background.xml" value="0.240625" />
+        <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/drawable/wrong_square_background.xml" value="0.240625" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/layout/activity_main.xml" value="0.22447916666666667" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/layout/bottomsheet_help.xml" value="0.22447916666666667" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/layout/bottomsheet_settings.xml" value="0.33" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/layout/fragment_game.xml" value="0.22447916666666667" />
-        <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/layout/fragment_help.xml" value="0.5" />
+        <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/layout/fragment_help.xml" value="0.25" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/menu/game_menu.xml" value="0.22447916666666667" />
         <entry key="..\:/Users/ADMIN/te6lim/app/src/main/res/xml/attrs.xml" value="0.22447916666666667" />
       </map>

@@ -8,5 +8,13 @@
     <fragment
         android:id="@+id/gameFragment"
         android:name="com.te6lim.word.game.GameFragment"
-        tools:layout="@layout/fragment_game" />
+        tools:layout="@layout/fragment_game">
+        <action
+            android:id="@+id/action_gameFragment_to_helpFragment"
+            app:destination="@id/help" />
+    </fragment>
+    <fragment
+        android:id="@+id/help"
+        android:name="com.te6lim.word.help.HelpFragment"
+        tools:layout="@layout/fragment_help" />
 </navigation>

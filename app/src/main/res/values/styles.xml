@@ -15,12 +15,17 @@
     <style name="center">
         <item name="android:layout_gravity">center</item>
         <item name="android:textAlignment">center</item>
+        <item name="android:textSize">28sp</item>
     </style>
 
     <style name="dummy_square_style">
-        <item name="android:layout_width">64dp</item>
-        <item name="android:layout_height">64dp</item>
+        <item name="android:layout_width">56dp</item>
+        <item name="android:layout_height">56dp</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:layout_margin">8dp</item>
+    </style>
+
+    <style name="myActionBarStyle" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="android:background">@color/backgroundColor</item>
     </style>
 </resources>

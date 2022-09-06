@@ -5,7 +5,9 @@ import android.view.*
 import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.te6lim.keyboard.KeyBoardView
+import com.te6lim.word.MainActivity
 import com.te6lim.word.R
 import com.te6lim.word.databinding.FragmentGameBinding
 import com.te6lim.word.settings.SettingsBottomSheet
@@ -16,12 +18,18 @@ class GameFragment : Fragment() {
 
     private lateinit var binding: FragmentGameBinding
 
+    private lateinit var menuProvider: MenuProvider
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_game, container, false)
 
-        requireActivity().addMenuProvider(object : MenuProvider {
+        (requireActivity() as MainActivity).setSupportActionBar(binding.toolbar)
+
+        (requireActivity() as MainActivity).supportActionBar?.title = null
+
+        menuProvider = object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.game_menu, menu)
             }
@@ -39,13 +47,16 @@ class GameFragment : Fragment() {
                         true
                     }
                     R.id.help -> {
+                        findNavController().navigate(GameFragmentDirections.actionGameFragmentToHelpFragment())
                         true
                     }
                     else -> return false
                 }
             }
 
-        })
+        }
+
+        requireActivity().addMenuProvider(menuProvider)
 
         val wordGame = WordGame()
         val gameBoard = binding.gameBoard
@@ -87,5 +98,12 @@ class GameFragment : Fragment() {
             }
         })
         return binding.root
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        requireActivity().removeMenuProvider(menuProvider)
+
     }
 }

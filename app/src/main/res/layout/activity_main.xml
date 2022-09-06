@@ -7,31 +7,6 @@
     android:layout_gravity="center"
     tools:context=".MainActivity">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:background="@color/backgroundColor"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            style="@style/titleTextStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/app_name" />
-    </com.google.android.material.appbar.MaterialToolbar>
-
-    <FrameLayout
-        android:id="@+id/toolbarDivider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/primaryColor"
-        app:layout_constraintEnd_toEndOf="@+id/toolbar"
-        app:layout_constraintStart_toStartOf="@+id/toolbar"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
-
     <fragment
         android:id="@+id/mainFragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -41,7 +16,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbarDivider"
+        app:layout_constraintTop_toTopOf="parent"
         app:navGraph="@navigation/navgraph" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
