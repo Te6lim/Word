@@ -6,4 +6,9 @@
     <color name="primaryTextColor">#ffffff</color>
 
     <color name="menuItemColor">#ffffff</color>
+
+    <color name="squareStrokeColor">#1a4b5c</color>
+
+    <color name="keyColor">#1a4b5c</color>
+    <color name="keyTextColor">#ffffff</color>
 </resources>

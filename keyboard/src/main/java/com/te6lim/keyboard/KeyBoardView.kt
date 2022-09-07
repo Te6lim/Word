@@ -23,6 +23,20 @@ class KeyBoardView @JvmOverloads constructor(
         ENTER, DELETE
     }
 
+    private val attributeArray = context.theme.obtainStyledAttributes(
+        attributeSet, R.styleable
+            .KeyBoardView, 0, 0
+    )
+
+    private val keyColor = attributeArray.getColor(
+        R.styleable.KeyBoardView_keyColor, Color.rgb(
+            211, 214,
+            219
+        )
+    )
+
+    private val keyTextColor = attributeArray.getColor(R.styleable.KeyBoardView_keyTextColor, Color.WHITE)
+
     private var keyWidth = 0.0f
     private var keyHeight = 0.0f
 
@@ -215,7 +229,7 @@ class KeyBoardView @JvmOverloads constructor(
 
         private var topValueForLargeRect = 0f
 
-        private var kColor = Color.rgb(211, 214, 219)
+        private var kColor = keyColor
             set(value) {
                 field = value
                 invalidate()
@@ -266,7 +280,7 @@ class KeyBoardView @JvmOverloads constructor(
                 )
             }
             paint.apply {
-                color = Color.BLACK
+                color = keyTextColor
                 textSize = keyWidth / 3
                 textAlign = Paint.Align.CENTER
                 typeface = Typeface.DEFAULT_BOLD
@@ -277,7 +291,9 @@ class KeyBoardView @JvmOverloads constructor(
                     char, keyWidth * 0.5f, textAccent, paint
                 )
             } else {
-                val pic = ContextCompat.getDrawable(context, R.drawable.ic_backspace)!!.toBitmap()
+                val pic = ContextCompat.getDrawable(context, R.drawable.ic_backspace)!!.apply {
+                    setTint(keyTextColor)
+                }.toBitmap()
                 if (isDeleteKey()) canvas.drawBitmap(
                     pic, (thirdRowConst - pic.width) * 0.5f,
                     ((thirdRowConst - pic.height) * 0.5f) + gap, paint

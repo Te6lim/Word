@@ -38,7 +38,8 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     var wrongColor = Color.rgb(120, 124, 127)
         private set
 
-    private var frameColor = Color.rgb(206, 206, 206)
+    private var frameColor =
+        attributeArray.getColor(R.styleable.GameBoard_squareStrokeColor, Color.rgb(206, 206, 206))
     private var highlightFrame = Color.rgb(206, 206, 206)
 
     private var charPosition = 0
@@ -60,15 +61,12 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     init {
         when (themeMode) {
             Configuration.UI_MODE_NIGHT_YES -> {
-                frameColor = wrongColor
                 highlightFrame = Color.rgb(206, 206, 206)
             }
             Configuration.UI_MODE_NIGHT_NO -> {
-                Color.rgb(206, 206, 206)
                 highlightFrame = wrongColor
             }
             else -> {
-                Color.rgb(206, 206, 206)
                 highlightFrame = Color.rgb(206, 206, 206)
             }
         }

@@ -14,4 +14,9 @@
     <color name="wrongLetter">#787C7F</color>
 
     <color name="menuItemColor">#000000</color>
+
+    <color name="squareStrokeColor">#adb6bb</color>
+
+    <color name="keyColor">#adb6bb</color>
+    <color name="keyTextColor">#000000</color>
 </resources>
