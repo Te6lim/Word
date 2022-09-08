@@ -14,14 +14,31 @@ class WordGame(private val source: WordSource? = null) {
 
     private var t = 0
 
-    private var word: String = "CLAMP"
+    private var characterCount = mutableMapOf<Char, Int>()
+
+    private var word: String = ""
         set(value) {
             field = value.uppercase()
+            resetCharacterCount()
         }
 
     private var guessWord = StringBuilder()
 
     private var guesses: List<GuessInfo> = mutableListOf()
+
+    init {
+        word = "CLICK"
+    }
+
+    private fun resetCharacterCount() {
+        characterCount = mutableMapOf()
+        for (c in word) {
+            if (characterCount.containsKey(c)) {
+                characterCount.replace(c, characterCount[c]!! + 1)
+            } else
+                characterCount[c] = 1
+        }
+    }
 
     internal fun addLetter(letter: Char) {
         if (guessWord.length < WORD_LENGTH) guessWord.append(letter)
@@ -57,7 +74,8 @@ class WordGame(private val source: WordSource? = null) {
 
     }
 
-    open inner class GuessInfo internal constructor(guess: String, t: Int) : GameBoard.WordState {
+    open inner class GuessInfo internal constructor(guess: String, t: Int) : GameBoard.WordState,
+        WordGameHelper {
 
         internal var misplacedCharacters = listOf<Char>()
 
@@ -71,7 +89,14 @@ class WordGame(private val source: WordSource? = null) {
 
         internal var unUsedCharacters = arrayListOf<Char>()
 
+        private val states = arrayListOf<CharState>()
+
         init {
+
+            resetCharacterCount()
+
+            for (i in 0 until WORD_LENGTH) states.add(CharState.WRONG)
+
             if (guess.isNotEmpty()) {
                 misplacedCharacters = misplacedCharacters()
                 wrongCharacters = wrongCharacters()
@@ -85,11 +110,16 @@ class WordGame(private val source: WordSource? = null) {
         }
 
         private fun correctCharacters(): List<Char> {
+            resetCharacterCount()
             val characters = mutableListOf<Char>()
             val wordArray = arrayListOf<Char>()
             for (c in word) wordArray.add(c)
             for ((i, c) in guessWord.withIndex()) {
                 if (c == wordArray[i]) {
+                    if (characterCount[c]!! > 0) {
+                        characterCount.replace(c, characterCount[c]!! - 1)
+                        states[i] = CharState.IN_PLACE
+                    }
                     characters.add(c)
                     wordArray[i] = '\u0000'
                 }
@@ -98,22 +128,45 @@ class WordGame(private val source: WordSource? = null) {
         }
 
         internal fun characterState(index: Int): CharState {
-            if (word[index] == guessWord[index] && correctCharacters.contains(guessWord[index]))
-                return CharState.IN_PLACE
+            /*if (word[index] == guessWord[index]) {
+                if (characterCount[guessWord[index]]?: -1 > 0) {
+                    characterCount[guessWord[index]] = characterCount[guessWord[index]]!! - 1
+                    return CharState.IN_PLACE
+                }
+            }
             if (correctCharacters.contains(guessWord[index])) return CharState.WRONG
-            if (misplacedCharacters.contains(guessWord[index])) return CharState.OUT_OF_PLACE
-            return CharState.WRONG
+            if (misplacedCharacters.contains(guessWord[index])) {
+                if (characterCount[guessWord[index]]?: -1 > 0) {
+                    characterCount[guessWord[index]] = characterCount[guessWord[index]]!! - 1
+                    return CharState.OUT_OF_PLACE
+                }
+                else CharState.WRONG
+            }
+            return CharState.WRONG*/
+            return states[index]
         }
 
         private fun misplacedCharacters(): List<Char> {
+            resetCharacterCount()
             val characters = mutableListOf<Char>()
             val wordArray = arrayListOf<Char>()
             for (c in word) wordArray.add(c)
+            var flag = false
             for ((i, c) in guessWord.withIndex()) {
-                if (c != wordArray[i] && wordArray.contains(c)) {
+
+                for (j in 0 until WORD_LENGTH) {
+                    if (guessWord[j] == wordArray[j] && c == guessWord[j]) flag = true
+                }
+
+                if (!flag && c != wordArray[i] && wordArray.contains(c)) {
+                    if (characterCount[c]!! > 0) {
+                        characterCount.replace(c, characterCount[c]!! - 1)
+                        states[i] = CharState.OUT_OF_PLACE
+                    }
                     characters.add(c)
                     wordArray[wordArray.indexOf(c)] = '\u0000'
                 }
+                flag = false
             }
             return characters
         }
@@ -132,7 +185,7 @@ class WordGame(private val source: WordSource? = null) {
         }
 
         internal fun isCorrect(): Boolean {
-            return guessWord.isNotEmpty() && misplacedCharacters.isEmpty() && wrongCharacters.isEmpty()
+            return guessWord == word
         }
 
         override fun getStateByPosition(p: Int, letter: Char): CharState {
@@ -140,5 +193,18 @@ class WordGame(private val source: WordSource? = null) {
             return if (word.contains(letter.uppercaseChar())) CharState.OUT_OF_PLACE
             else CharState.WRONG
         }
+
+        override fun getCharacterCount(): Map<Char, Int> {
+            val map = mutableMapOf<Char, Int>()
+            for (c in misplacedCharacters) {
+                if (map.containsKey(c)) map.replace(c, map[c]?.plus(1) ?: 0)
+                else map[c] = 1
+            }
+            return map
+        }
     }
+}
+
+interface WordGameHelper {
+    fun getCharacterCount(): Map<Char, Int>
 }

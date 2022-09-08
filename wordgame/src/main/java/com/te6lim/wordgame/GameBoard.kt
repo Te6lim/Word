@@ -212,7 +212,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         game?.getLatestGuess()?.let {
 
             if (it.guessWord.length < WORD_LENGTH) guessFlag = GuessFlag.INCOMPLETE
-            else if (it.guessWord.length == WORD_LENGTH) guessFlag = GuessFlag.INCORRECT
+            else {
+                if (it.guessWord.length == WORD_LENGTH) guessFlag = GuessFlag.INCORRECT
+            }
 
             when (guessFlag) {
                 GuessFlag.INCORRECT -> {
@@ -356,39 +358,41 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 paint.style = Paint.Style.STROKE
             }
 
-            if (listener.getInfo()?.characterState(column) == WordGame.CharState.WRONG) {
-                paint.style = Paint.Style.FILL
-                paint.color = wrongColor
-                canvas.drawRect(
-                    stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
-                )
-            } else {
+            listener.getInfo()?.let {
+                when (it.characterState(column)) {
+                    WordGame.CharState.WRONG -> {
+                        paint.style = Paint.Style.FILL
+                        paint.color = wrongColor
+                        canvas.drawRect(
+                            stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
+                        )
+                    }
 
-                if (listener.getInfo()?.characterState(column) == WordGame.CharState.OUT_OF_PLACE) {
-                    paint.style = Paint.Style.FILL
-                    paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                        misplacedColor else wrongColor
-                    canvas.drawRect(
-                        stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
-                    )
-                } else {
-                    if (listener.getInfo()?.characterState(column) == WordGame.CharState.IN_PLACE) {
+                    WordGame.CharState.OUT_OF_PLACE -> {
+                        paint.style = Paint.Style.FILL
+                        paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
+                            misplacedColor else wrongColor
+                        canvas.drawRect(
+                            stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
+                        )
+                    }
+
+                    WordGame.CharState.IN_PLACE -> {
                         paint.style = Paint.Style.FILL
                         paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
                             correctColor else wrongColor
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
-                    } else {
-                        paint.style = Paint.Style.STROKE
-                        paint.color = if (letter == '\u0000') frameColor
-                        else highlightFrame
-                        canvas.drawRect(
-                            stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
-                        )
                     }
                 }
-
+            } ?: run {
+                paint.style = Paint.Style.STROKE
+                paint.color = if (letter == '\u0000') frameColor
+                else highlightFrame
+                canvas.drawRect(
+                    stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
+                )
             }
 
             point.calculateTextPosition()

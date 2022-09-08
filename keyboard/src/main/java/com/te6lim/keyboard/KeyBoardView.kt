@@ -287,9 +287,7 @@ class KeyBoardView @JvmOverloads constructor(
             }
 
             if (!isEnterKeyOrDelete()) {
-                canvas.drawText(
-                    char, keyWidth * 0.5f, textAccent, paint
-                )
+                canvas.drawText(char, keyWidth * 0.5f, textAccent, paint)
             } else {
                 val pic = ContextCompat.getDrawable(context, R.drawable.ic_backspace)!!.apply {
                     setTint(keyTextColor)
