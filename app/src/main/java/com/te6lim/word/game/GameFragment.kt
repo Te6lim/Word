@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.word.MainActivity
 import com.te6lim.word.R
+import com.te6lim.word.WordApplication
 import com.te6lim.word.databinding.FragmentGameBinding
 import com.te6lim.word.settings.SettingsBottomSheet
 import com.te6lim.wordgame.GameBoard
@@ -87,7 +88,14 @@ class GameFragment : Fragment() {
                     true
                 }
                 R.id.settings_screen -> {
-                    val settingsBottomSheet = SettingsBottomSheet()
+                    val settingsBottomSheet = SettingsBottomSheet().apply {
+                        setItemListener(object : SettingsBottomSheet.SettingsItemListener {
+                            override fun onThemeSelected(isDarkTheme: Boolean) {
+                                (requireActivity().application as WordApplication)
+                                    .darkThemeActive = isDarkTheme
+                            }
+                        })
+                    }
                     settingsBottomSheet.show(
                         requireActivity().supportFragmentManager, SettingsBottomSheet.TAG
                     )
