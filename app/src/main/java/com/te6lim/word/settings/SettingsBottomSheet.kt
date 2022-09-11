@@ -1,5 +1,6 @@
 package com.te6lim.word.settings
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,6 +29,11 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
         binding = DataBindingUtil.inflate(
             inflater, R.layout.bottomsheet_settings, container, false
         )
+
+        when (resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> binding.darkThemeSwitch.isChecked = true
+            Configuration.UI_MODE_NIGHT_NO -> binding.darkThemeSwitch.isChecked = false
+        }
 
         binding.closeButton.setOnClickListener {
             dismiss()

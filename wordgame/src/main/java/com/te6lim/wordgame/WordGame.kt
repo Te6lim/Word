@@ -48,12 +48,7 @@ class WordGame(private val source: WordSource? = null) {
         if (guessWord.isNotEmpty()) guessWord.deleteCharAt(guessWord.lastIndex)
     }
 
-    fun getAllGuesses(): List<GuessInfo> {
-        if (t < MAX_TRIAL - 1 && guessWord.isNotEmpty()) {
-            val guessInfo = GuessInfo(guessWord.toString(), t++)
-            guesses = guesses.toMutableList().apply { add(guessInfo) }
-            guessWord = StringBuilder()
-        }
+    internal fun getAllGuesses(): List<GuessInfo> {
         return guesses
     }
 
@@ -61,13 +56,22 @@ class WordGame(private val source: WordSource? = null) {
         if (t < MAX_TRIAL) {
             return if (guessWord.length < WORD_LENGTH) GuessInfo(guessWord.toString(), t)
             else {
-                val guessInfo = GuessInfo(guessWord.toString(), t++)
-                guesses = guesses.toMutableList().apply { add(guessInfo) }
-                guessWord = StringBuilder()
-                guessInfo
+                val redundantGuessInfo = guesses.find { it.trial == t }
+                if (redundantGuessInfo != null) {
+                    redundantGuessInfo
+                } else {
+                    val guessInfo = GuessInfo(guessWord.toString(), t++)
+                    guesses = guesses.toMutableList().apply { add(guessInfo) }
+                    guessWord = StringBuilder()
+                    guessInfo
+                }
             }
         }
         return null
+    }
+
+    internal fun removeAllCharacters() {
+        guessWord = StringBuilder()
     }
 
     open inner class GuessInfo internal constructor(guess: String, t: Int) : GameBoard.WordState,

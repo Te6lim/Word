@@ -6,6 +6,7 @@ import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.word.MainActivity
@@ -22,10 +23,16 @@ class GameFragment : Fragment() {
 
     private lateinit var menuProvider: MenuProvider
 
+    private lateinit var wordGame: WordGame
+
+    private lateinit var gameBoard: GameBoard
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_game, container, false)
+
+        binding.lifecycleOwner = viewLifecycleOwner
 
         (requireActivity() as MainActivity).setSupportActionBar(binding.toolbar)
 
@@ -35,10 +42,14 @@ class GameFragment : Fragment() {
 
         requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
-        val wordGame = WordGame()
-        val gameBoard = binding.gameBoard
+        wordGame = WordGame()
+        gameBoard = binding.gameBoard
 
-        gameBoard.setUpWithBoard(wordGame)
+        val viewModelFactory = GameViewModel.GameViewModelFactory(wordGame)
+
+        val viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
+
+        gameBoard.setUpWithBoard(viewModel.gameInstance.value!!)
 
         val keyBoard = binding.keyBoardView
 
@@ -74,6 +85,12 @@ class GameFragment : Fragment() {
                 }
             }
         })
+
+        viewModel.gameInstance.observe(viewLifecycleOwner) {
+            gameBoard.setUpWithBoard(it)
+            gameBoard.restoreGuesses()
+        }
+
         return binding.root
     }
 
@@ -87,6 +104,7 @@ class GameFragment : Fragment() {
                 R.id.profile -> {
                     true
                 }
+
                 R.id.settings_screen -> {
                     val settingsBottomSheet = SettingsBottomSheet().apply {
                         setItemListener(object : SettingsBottomSheet.SettingsItemListener {

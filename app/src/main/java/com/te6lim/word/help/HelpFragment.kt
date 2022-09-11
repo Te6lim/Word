@@ -21,9 +21,7 @@ class HelpFragment : Fragment() {
         val helpView = inflater.inflate(R.layout.fragment_help, container, false)
 
         val menuProvider = object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-
-            }
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 when (menuItem.itemId) {
@@ -33,7 +31,6 @@ class HelpFragment : Fragment() {
                 }
                 return false
             }
-
         }
 
         val helpToolbar = helpView.findViewById<MaterialToolbar>(R.id.helpToolBar)

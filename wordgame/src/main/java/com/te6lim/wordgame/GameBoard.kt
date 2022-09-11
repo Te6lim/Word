@@ -244,12 +244,55 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         }
     }
 
+    private fun submitGuessAt(index: Int) {
+        submitted = true
+
+        val guesses = game!!.getAllGuesses()
+
+        if (guesses[index].guessWord.length < WORD_LENGTH) guessFlag = GuessFlag.INCOMPLETE
+        else {
+            if (guesses[index].guessWord.length == WORD_LENGTH) guessFlag = GuessFlag.INCORRECT
+        }
+
+        when (guessFlag) {
+            GuessFlag.INCORRECT -> {
+                charPosition = 0
+                turn = guesses[index].trial + 1
+                submitListener?.onGuessSubmitted(
+                    guesses[index].correctCharacters, guesses[index].misplacedCharacters,
+                    guesses[index].wrongCharacters
+                )
+                setNewSquaresInRow(guesses[index].trial, guesses[index])
+                if (guesses[index].isCorrect()) {
+                    guessFlag = GuessFlag.CORRECT
+                    disableInput()
+                }
+            }
+
+            GuessFlag.INCOMPLETE -> {
+                animGroup[guesses[index].trial].apply {
+                    end()
+                    start()
+                }
+            }
+
+            GuessFlag.CORRECT -> {
+            }
+        }
+    }
+
     private fun disableInput() {
         turn = -1
         charPosition = -1
     }
 
-    fun restoreGuesses(guessList: List<WordGame.GuessInfo>) {}
+    fun restoreGuesses() {
+        for (info in game!!.getAllGuesses()) {
+            for (c in info.guessWord) setCharacter(c)
+            submitGuessAt(info.trial)
+        }
+        game?.removeAllCharacters()
+    }
 
     private fun ArrayList<ArrayList<Square>>.buildAnimations(): List<List<AnimatorSet>> {
         val list = arrayListOf<ArrayList<AnimatorSet>>()
