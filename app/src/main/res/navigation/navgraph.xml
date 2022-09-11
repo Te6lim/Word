@@ -13,6 +13,8 @@
             android:id="@+id/action_gameFragment_to_helpFragment"
             app:destination="@id/help"
             app:enterAnim="@anim/rise_up"
+            app:exitAnim="@anim/fall_back"
+            app:popEnterAnim="@anim/fall_in"
             app:popExitAnim="@anim/fall_down" />
     </fragment>
     <fragment
