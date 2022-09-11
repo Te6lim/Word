@@ -70,10 +70,6 @@ class WordGame(private val source: WordSource? = null) {
         return null
     }
 
-    internal fun generateStats() {
-
-    }
-
     open inner class GuessInfo internal constructor(guess: String, t: Int) : GameBoard.WordState,
         WordGameHelper {
 
@@ -87,8 +83,6 @@ class WordGame(private val source: WordSource? = null) {
 
         internal val guessWord = guess.uppercase()
 
-        internal var unUsedCharacters = arrayListOf<Char>()
-
         private val states = arrayListOf<CharState>()
 
         init {
@@ -101,12 +95,7 @@ class WordGame(private val source: WordSource? = null) {
                 misplacedCharacters = misplacedCharacters()
                 wrongCharacters = wrongCharacters()
                 correctCharacters = correctCharacters()
-                resetUnselectedCharacters()
             }
-        }
-
-        fun resetUnselectedCharacters() {
-            for (c in word) unUsedCharacters.add(c)
         }
 
         private fun correctCharacters(): List<Char> {

@@ -11,7 +11,9 @@
         tools:layout="@layout/fragment_game">
         <action
             android:id="@+id/action_gameFragment_to_helpFragment"
-            app:destination="@id/help" />
+            app:destination="@id/help"
+            app:enterAnim="@anim/rise_up"
+            app:popExitAnim="@anim/fall_down" />
     </fragment>
     <fragment
         android:id="@+id/help"

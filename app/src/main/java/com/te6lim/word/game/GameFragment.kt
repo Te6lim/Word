@@ -5,6 +5,7 @@ import android.view.*
 import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.word.MainActivity
@@ -29,34 +30,9 @@ class GameFragment : Fragment() {
 
         (requireActivity() as MainActivity).supportActionBar?.title = null
 
-        menuProvider = object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.game_menu, menu)
-            }
+        menuProvider = getMenu()
 
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.profile -> {
-                        true
-                    }
-                    R.id.settings_screen -> {
-                        val settingsBottomSheet = SettingsBottomSheet()
-                        settingsBottomSheet.show(
-                            requireActivity().supportFragmentManager, SettingsBottomSheet.TAG
-                        )
-                        true
-                    }
-                    R.id.help -> {
-                        findNavController().navigate(GameFragmentDirections.actionGameFragmentToHelpFragment())
-                        true
-                    }
-                    else -> return false
-                }
-            }
-
-        }
-
-        requireActivity().addMenuProvider(menuProvider)
+        requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         val wordGame = WordGame()
         val gameBoard = binding.gameBoard
@@ -100,10 +76,30 @@ class GameFragment : Fragment() {
         return binding.root
     }
 
-    override fun onPause() {
-        super.onPause()
+    private fun getMenu() = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menuInflater.inflate(R.menu.game_menu, menu)
+        }
 
-        requireActivity().removeMenuProvider(menuProvider)
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+            return when (menuItem.itemId) {
+                R.id.profile -> {
+                    true
+                }
+                R.id.settings_screen -> {
+                    val settingsBottomSheet = SettingsBottomSheet()
+                    settingsBottomSheet.show(
+                        requireActivity().supportFragmentManager, SettingsBottomSheet.TAG
+                    )
+                    true
+                }
+                R.id.help -> {
+                    findNavController().navigate(GameFragmentDirections.actionGameFragmentToHelpFragment())
+                    true
+                }
+                else -> return false
+            }
+        }
 
     }
 }

@@ -59,15 +59,15 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
     private val themeMode = resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)
 
     init {
-        when (themeMode) {
+        highlightFrame = when (themeMode) {
             Configuration.UI_MODE_NIGHT_YES -> {
-                highlightFrame = Color.rgb(206, 206, 206)
+                Color.rgb(206, 206, 206)
             }
             Configuration.UI_MODE_NIGHT_NO -> {
-                highlightFrame = wrongColor
+                wrongColor
             }
             else -> {
-                highlightFrame = Color.rgb(206, 206, 206)
+                Color.rgb(206, 206, 206)
             }
         }
         generateLetters()
@@ -370,8 +370,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
                     WordGame.CharState.OUT_OF_PLACE -> {
                         paint.style = Paint.Style.FILL
-                        paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                            misplacedColor else wrongColor
+                        paint.color = misplacedColor
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
@@ -379,8 +378,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
                     WordGame.CharState.IN_PLACE -> {
                         paint.style = Paint.Style.FILL
-                        paint.color = if (listener.getInfo()?.unUsedCharacters?.contains(letter) == true)
-                            correctColor else wrongColor
+                        paint.color = correctColor
                         canvas.drawRect(
                             stroke, stroke, cellWidth - stroke, cellWidth - stroke, paint
                         )
