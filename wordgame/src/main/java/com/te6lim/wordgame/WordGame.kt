@@ -56,15 +56,10 @@ class WordGame(private val source: WordSource? = null) {
         if (t < MAX_TRIAL) {
             return if (guessWord.length < WORD_LENGTH) GuessInfo(guessWord.toString(), t)
             else {
-                val redundantGuessInfo = guesses.find { it.trial == t }
-                if (redundantGuessInfo != null) {
-                    redundantGuessInfo
-                } else {
-                    val guessInfo = GuessInfo(guessWord.toString(), t++)
-                    guesses = guesses.toMutableList().apply { add(guessInfo) }
-                    guessWord = StringBuilder()
-                    guessInfo
-                }
+                val guessInfo = GuessInfo(guessWord.toString(), t++)
+                guesses = guesses.toMutableList().apply { add(guessInfo) }
+                guessWord = StringBuilder()
+                guessInfo
             }
         }
         return null
@@ -148,7 +143,7 @@ class WordGame(private val source: WordSource? = null) {
             for ((i, c) in guessWord.withIndex()) {
 
                 for (j in 0 until WORD_LENGTH) {
-                    if (guessWord[j] == wordArray[j] && c == guessWord[j]) flag = true
+                    if (j < guessWord.length && guessWord[j] == wordArray[j] && c == guessWord[j]) flag = true
                 }
 
                 if (!flag && c != wordArray[i] && wordArray.contains(c)) {
