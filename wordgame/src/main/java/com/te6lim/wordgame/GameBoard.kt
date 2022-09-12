@@ -77,6 +77,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     fun setUpWithBoard(g: WordGame) {
         game = g
+        restoreGuesses()
     }
 
     private fun pos(r: Int, col: Int): Int {
@@ -286,7 +287,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
         charPosition = -1
     }
 
-    fun restoreGuesses() {
+    private fun restoreGuesses() {
         for (info in game!!.getAllGuesses()) {
             for (c in info.guessWord) setCharacter(c)
             submitGuessAt(info.trial)

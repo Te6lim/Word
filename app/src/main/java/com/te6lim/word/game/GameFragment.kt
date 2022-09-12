@@ -32,7 +32,7 @@ class GameFragment : Fragment() {
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_game, container, false)
 
-        binding.lifecycleOwner = viewLifecycleOwner
+        binding.lifecycleOwner = this
 
         (requireActivity() as MainActivity).setSupportActionBar(binding.toolbar)
 
@@ -48,8 +48,6 @@ class GameFragment : Fragment() {
         val viewModelFactory = GameViewModel.GameViewModelFactory(wordGame)
 
         val viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
-
-        gameBoard.setUpWithBoard(viewModel.gameInstance.value!!)
 
         val keyBoard = binding.keyBoardView
 
@@ -88,7 +86,6 @@ class GameFragment : Fragment() {
 
         viewModel.gameInstance.observe(viewLifecycleOwner) {
             gameBoard.setUpWithBoard(it)
-            gameBoard.restoreGuesses()
         }
 
         return binding.root
