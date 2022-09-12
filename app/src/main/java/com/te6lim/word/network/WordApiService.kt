@@ -28,7 +28,6 @@ interface WordApiService {
 
     @GET("getMultipleRandom")
     fun getWord(
-        @Header("X-RapidAPI-Key") key: String = "2ee5dc674emshfc8242c0033dcfbp133d7ejsn0f4c61d1c077",
         @Header("X-RapidAPI-Host") host: String = "random-words5.p.rapidapi.com",
         @Query("wordLength") length: Int = 5,
         @Query("count") count: Int = 5
