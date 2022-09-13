@@ -16,7 +16,7 @@ data class Word(
 interface WordDatabaseDao {
 
     @Insert
-    fun insertWords(wordList: List<String>): List<Long>
+    fun insertWords(wordList: List<Word>): List<Long>
 
     @Query("SELECT * FROM word WHERE id = :wordId")
     suspend fun getWord(wordId: Long): Word
@@ -24,7 +24,7 @@ interface WordDatabaseDao {
     @Query("SELECT * FROM word")
     fun getAll(): LiveData<List<Word>?>
 
-    @Query("DELETE FROM word WHERE id = :wordId LIMIT 1")
+    @Query("DELETE FROM word WHERE id = :wordId")
     suspend fun deleteWord(wordId: Long)
 
     @Query("DELETE FROM word")

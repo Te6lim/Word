@@ -1,6 +1,6 @@
 package com.te6lim.wordgame
 
-class WordGame(private val source: WordSource) {
+class WordGame(private val source: WordSource? = null) {
 
     companion object {
         const val MAX_TRIAL = 6
@@ -27,7 +27,7 @@ class WordGame(private val source: WordSource) {
     private var guesses: List<GuessInfo> = mutableListOf()
 
     init {
-        word = source.getWord()
+        word = "CLICK"
     }
 
     private fun resetCharacterCount() {

@@ -27,7 +27,8 @@ private val retrofit = Retrofit.Builder()
 interface WordApiService {
 
     @GET("getMultipleRandom")
-    fun getWord(
+    fun getWordAsync(
+        @Header("X-RapidAPI-Key") key: String,
         @Header("X-RapidAPI-Host") host: String = "random-words5.p.rapidapi.com",
         @Query("wordLength") length: Int = 5,
         @Query("count") count: Int = 5

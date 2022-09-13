@@ -20,7 +20,7 @@ class Repository(wordDatabase: WordDatabase, private val network: WordApiService
     }
 
     private suspend fun getWordsAsync(): Response {
-        return network.getWord().await()
+        return network.getWordAsync("").await()
     }
 
 }
