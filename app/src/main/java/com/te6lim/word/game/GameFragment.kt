@@ -8,6 +8,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.word.MainActivity
@@ -20,6 +21,7 @@ import com.te6lim.word.repository.Repository
 import com.te6lim.word.settings.SettingsBottomSheet
 import com.te6lim.wordgame.GameBoard
 import com.te6lim.wordgame.WordGame
+import kotlinx.coroutines.flow.collectLatest
 
 class GameFragment : Fragment() {
 
@@ -55,10 +57,10 @@ class GameFragment : Fragment() {
 
         val repository = Repository(wordDB, network)
 
-        wordGame = WordGame(repository)
+        wordGame = WordGame()
         gameBoard = binding.gameBoard
 
-        val viewModelFactory = GameViewModel.GameViewModelFactory(wordGame)
+        val viewModelFactory = GameViewModel.GameViewModelFactory(wordGame, repository)
 
         val viewModel = ViewModelProvider(this, viewModelFactory)[GameViewModel::class.java]
 
@@ -99,6 +101,12 @@ class GameFragment : Fragment() {
 
         viewModel.gameInstance.observe(viewLifecycleOwner) {
             gameBoard.setUpWithBoard(it)
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.word.collectLatest {
+                it?.let { wordGame.word = it }
+            }
         }
 
         return binding.root

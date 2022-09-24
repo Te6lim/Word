@@ -1,6 +1,6 @@
 package com.te6lim.wordgame
 
-class WordGame(private val source: WordSource) {
+class WordGame {
 
     companion object {
         const val MAX_TRIAL = 6
@@ -16,7 +16,7 @@ class WordGame(private val source: WordSource) {
 
     private var characterCount = mutableMapOf<Char, Int>()
 
-    private var word: String = ""
+    var word: String = ""
         set(value) {
             field = value.uppercase()
             resetCharacterCount()
@@ -25,10 +25,6 @@ class WordGame(private val source: WordSource) {
     private var guessWord = StringBuilder()
 
     private var guesses: List<GuessInfo> = mutableListOf()
-
-    init {
-        word = source.getWord()
-    }
 
     private fun resetCharacterCount() {
         characterCount = mutableMapOf()
@@ -116,21 +112,7 @@ class WordGame(private val source: WordSource) {
         }
 
         internal fun characterState(index: Int): CharState {
-            /*if (word[index] == guessWord[index]) {
-                if (characterCount[guessWord[index]]?: -1 > 0) {
-                    characterCount[guessWord[index]] = characterCount[guessWord[index]]!! - 1
-                    return CharState.IN_PLACE
-                }
-            }
-            if (correctCharacters.contains(guessWord[index])) return CharState.WRONG
-            if (misplacedCharacters.contains(guessWord[index])) {
-                if (characterCount[guessWord[index]]?: -1 > 0) {
-                    characterCount[guessWord[index]] = characterCount[guessWord[index]]!! - 1
-                    return CharState.OUT_OF_PLACE
-                }
-                else CharState.WRONG
-            }
-            return CharState.WRONG*/
+
             return states[index]
         }
 
