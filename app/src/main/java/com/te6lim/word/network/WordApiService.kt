@@ -3,7 +3,6 @@ package com.te6lim.word.network
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.te6lim.word.models.Response
 import kotlinx.coroutines.Deferred
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -32,11 +31,25 @@ interface WordApiService {
         @Header("X-RapidAPI-Host") host: String = "random-words5.p.rapidapi.com",
         @Query("wordLength") length: Int = 5,
         @Query("count") count: Int = 5
-    ): Deferred<Response>
+    ): Deferred<List<String>>
 }
 
-object WordApi {
-    val retrofitService: WordApiService by lazy {
-        retrofit.create(WordApiService::class.java)
+class WordApi(val apiKey: String, val wordApiService: WordApiService) {
+
+    companion object {
+
+        var INSTANCE: WordApi? = null
+
+        fun getInstance(apiKey: String): WordApi {
+            var instance = INSTANCE
+            if (instance == null) {
+                val retrofitService: WordApiService by lazy {
+                    retrofit.create(WordApiService::class.java)
+                }
+                instance = WordApi(apiKey, retrofitService)
+                INSTANCE = instance
+            }
+            return instance
+        }
     }
 }

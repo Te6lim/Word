@@ -1,7 +1,6 @@
 package com.te6lim.word.database
 
 import android.content.Context
-import androidx.lifecycle.LiveData
 import androidx.room.*
 
 @Entity(tableName = "word")
@@ -16,13 +15,13 @@ data class Word(
 interface WordDatabaseDao {
 
     @Insert
-    fun insertWords(wordList: List<Word>): List<Long>
+    suspend fun insertWords(wordList: List<Word>): List<Long>
 
     @Query("SELECT * FROM word WHERE id = :wordId")
     suspend fun getWord(wordId: Long): Word
 
     @Query("SELECT * FROM word")
-    fun getAll(): LiveData<List<Word>?>
+    suspend fun getAll(): List<Word>
 
     @Query("DELETE FROM word WHERE id = :wordId")
     suspend fun deleteWord(wordId: Long)
