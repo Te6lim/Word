@@ -51,8 +51,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     private var squareGroups = arrayListOf<ArrayList<Square>>()
 
-    private var guessFlag = GuessFlag.INCORRECT
-
     private var animList: List<List<AnimatorSet>>
     private var animGroup: List<AnimatorSet>
 
@@ -212,12 +210,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         game?.getLatestGuess()?.let {
 
-            if (it.guessWord.length < WORD_LENGTH) guessFlag = GuessFlag.INCOMPLETE
-            else {
-                if (it.guessWord.length == WORD_LENGTH) guessFlag = GuessFlag.INCORRECT
-            }
-
-            when (guessFlag) {
+            when (it.correctState) {
                 GuessFlag.INCORRECT -> {
                     charPosition = 0
                     turn = it.trial + 1
@@ -225,10 +218,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                         it.correctCharacters, it.misplacedCharacters, it.wrongCharacters
                     )
                     setNewSquaresInRow(it.trial, it)
-                    if (it.isCorrect()) {
-                        guessFlag = GuessFlag.CORRECT
-                        disableInput()
-                    }
                 }
 
                 GuessFlag.INCOMPLETE -> {
@@ -240,6 +229,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                 }
 
                 GuessFlag.CORRECT -> {
+                    setNewSquaresInRow(it.trial, it)
+                    submitListener?.onCorrectGuess(it.guessWord)
+                    disableInput()
                 }
             }
         }
@@ -250,12 +242,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
         val guesses = game!!.getAllGuesses()
 
-        if (guesses[index].guessWord.length < WORD_LENGTH) guessFlag = GuessFlag.INCOMPLETE
-        else {
-            if (guesses[index].guessWord.length == WORD_LENGTH) guessFlag = GuessFlag.INCORRECT
-        }
-
-        when (guessFlag) {
+        when (guesses[index].correctState) {
             GuessFlag.INCORRECT -> {
                 charPosition = 0
                 turn = guesses[index].trial + 1
@@ -264,10 +251,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
                     guesses[index].wrongCharacters
                 )
                 setNewSquaresInRow(guesses[index].trial, guesses[index])
-                if (guesses[index].isCorrect()) {
-                    guessFlag = GuessFlag.CORRECT
-                    disableInput()
-                }
             }
 
             GuessFlag.INCOMPLETE -> {
@@ -278,6 +261,9 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
             }
 
             GuessFlag.CORRECT -> {
+                setNewSquaresInRow(guesses[index].trial, guesses[index])
+                submitListener?.onCorrectGuess(guesses[index].guessWord)
+                disableInput()
             }
         }
     }
@@ -485,5 +471,7 @@ constructor(context: Context, attributeSet: AttributeSet? = null) : ViewGroup(co
 
     interface SubmitListener {
         fun onGuessSubmitted(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>)
+
+        fun onCorrectGuess(word: String)
     }
 }

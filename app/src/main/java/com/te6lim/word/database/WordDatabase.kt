@@ -5,10 +5,9 @@ import androidx.room.*
 
 @Entity(tableName = "word")
 data class Word(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L,
-    @ColumnInfo
-    val data: String? = null
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    @ColumnInfo val data: String? = null,
+    @ColumnInfo var isUsed: Boolean = false
 )
 
 @Dao
@@ -17,11 +16,14 @@ interface WordDatabaseDao {
     @Insert
     suspend fun insertWords(wordList: List<Word>): List<Long>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(word: Word): Long
+
     @Query("SELECT * FROM word WHERE id = :wordId")
     suspend fun getWord(wordId: Long): Word
 
-    @Query("SELECT * FROM word")
-    suspend fun getAll(): List<Word>
+    @Query("SELECT * FROM word WHERE isUsed = :used")
+    suspend fun getAll(used: Boolean = false): List<Word>
 
     @Query("DELETE FROM word WHERE id = :wordId")
     suspend fun deleteWord(wordId: Long)

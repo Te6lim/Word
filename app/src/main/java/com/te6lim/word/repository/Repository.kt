@@ -4,11 +4,8 @@ import com.te6lim.word.database.Word
 import com.te6lim.word.database.WordDatabase
 import com.te6lim.word.network.WordApi
 import com.te6lim.word.toWordList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 
 class Repository(private val wordDatabase: WordDatabase, private val network: WordApi) {
 
@@ -25,21 +22,32 @@ class Repository(private val wordDatabase: WordDatabase, private val network: Wo
                 try {
                     val words = getWordsAsync()
                     val wordList = words.toWordList().toMutableList()
-                    _currentWord.value = wordList.removeAt(0)
-                    wordDatabase.wordDao.insertWords(wordList)
+                    withContext(Dispatchers.IO) {
+                        wordDatabase.wordDao.insertWords(wordList).apply {
+                            _currentWord.value = wordDatabase.wordDao.getWord(this[0])
+                        }
+                    }
                 } catch (e: Exception) {
                     _currentWord.value = null
                 }
             } else {
                 val wordList = remainingWords.toMutableList()
-                _currentWord.value = wordList.removeAt(0)
-                wordDatabase.wordDao.insertWords(wordList)
+                _currentWord.value = wordList[0]
             }
         }
     }
 
     private suspend fun getWordsAsync(): List<String> {
         return network.wordApiService.getWordAsync(network.apiKey).await()
+    }
+
+    fun markWordAsUsed(id: Long) {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                val word = wordDatabase.wordDao.getWord(id).apply { isUsed = true }
+                wordDatabase.wordDao.insert(word)
+            }
+        }
     }
 
 }

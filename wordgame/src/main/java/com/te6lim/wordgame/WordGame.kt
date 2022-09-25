@@ -26,6 +26,8 @@ class WordGame {
 
     private var guesses: List<GuessInfo> = mutableListOf()
 
+    private var gameComplete = false
+
     private fun resetCharacterCount() {
         characterCount = mutableMapOf()
         for (c in word) {
@@ -49,12 +51,13 @@ class WordGame {
     }
 
     internal fun getLatestGuess(): GuessInfo? {
-        if (t < MAX_TRIAL) {
+        if (t < MAX_TRIAL && !gameComplete) {
             return if (guessWord.length < WORD_LENGTH) GuessInfo(guessWord.toString(), t)
             else {
                 val guessInfo = GuessInfo(guessWord.toString(), t++)
                 guesses = guesses.toMutableList().apply { add(guessInfo) }
                 guessWord = StringBuilder()
+                if (guessInfo.isCorrect()) gameComplete = true
                 guessInfo
             }
         }
@@ -80,6 +83,8 @@ class WordGame {
 
         private val states = arrayListOf<CharState>()
 
+        internal var correctState: GameBoard.GuessFlag
+
         init {
 
             resetCharacterCount()
@@ -91,6 +96,10 @@ class WordGame {
                 wrongCharacters = wrongCharacters()
                 correctCharacters = correctCharacters()
             }
+
+            if (guessWord.length < WORD_LENGTH) correctState = GameBoard.GuessFlag.INCOMPLETE
+            correctState = if (isCorrect()) GameBoard.GuessFlag.CORRECT
+            else GameBoard.GuessFlag.INCORRECT
         }
 
         private fun correctCharacters(): List<Char> {

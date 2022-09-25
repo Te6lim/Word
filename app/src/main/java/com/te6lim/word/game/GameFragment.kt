@@ -1,6 +1,5 @@
 package com.te6lim.word.game
 
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.*
 import androidx.core.view.MenuProvider
@@ -14,10 +13,7 @@ import com.te6lim.keyboard.KeyBoardView
 import com.te6lim.word.MainActivity
 import com.te6lim.word.R
 import com.te6lim.word.WordApplication
-import com.te6lim.word.database.WordDatabase
 import com.te6lim.word.databinding.FragmentGameBinding
-import com.te6lim.word.network.WordApi
-import com.te6lim.word.repository.Repository
 import com.te6lim.word.settings.SettingsBottomSheet
 import com.te6lim.wordgame.GameBoard
 import com.te6lim.wordgame.WordGame
@@ -48,14 +44,7 @@ class GameFragment : Fragment() {
 
         requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
-        val apiKey = requireContext().packageManager.getApplicationInfo(
-            requireContext().packageName, PackageManager.GET_META_DATA
-        ).metaData.getString("WORD_KEY")
-
-        val wordDB = WordDatabase.getInstance(requireContext())
-        val network = WordApi.getInstance(apiKey!!)
-
-        val repository = Repository(wordDB, network)
+        val repository = (requireActivity().application as WordApplication).repository
 
         wordGame = WordGame()
         gameBoard = binding.gameBoard
@@ -76,6 +65,10 @@ class GameFragment : Fragment() {
 
             override fun onGuessSubmitted(correct: List<Char>, misplaced: List<Char>, wrong: List<Char>) {
                 keyBoard.gameBoardAdapter.highlightKeys(correct, misplaced, wrong)
+            }
+
+            override fun onCorrectGuess(word: String) {
+                viewModel.markCurrentWordAsUsed()
             }
 
         })
@@ -105,7 +98,9 @@ class GameFragment : Fragment() {
 
         lifecycleScope.launchWhenStarted {
             viewModel.word.collectLatest {
-                it?.let { wordGame.word = it }
+                it?.let { word ->
+                    wordGame.word = word
+                }
             }
         }
 

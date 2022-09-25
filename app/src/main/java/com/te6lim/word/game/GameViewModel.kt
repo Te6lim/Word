@@ -8,7 +8,7 @@ import com.te6lim.word.repository.Repository
 import com.te6lim.wordgame.WordGame
 import kotlinx.coroutines.flow.map
 
-class GameViewModel(game: WordGame, repository: Repository) : ViewModel() {
+class GameViewModel(game: WordGame, private val repository: Repository) : ViewModel() {
 
     private val _gameInstance = MutableLiveData(game)
 
@@ -18,6 +18,12 @@ class GameViewModel(game: WordGame, repository: Repository) : ViewModel() {
 
     val gameInstance: LiveData<WordGame>
         get() = _gameInstance
+
+    fun markCurrentWordAsUsed() {
+        repository.currentWord.value?.let {
+            repository.markWordAsUsed(it.id)
+        }
+    }
 
     class GameViewModelFactory(
         private val game: WordGame, private val repository: Repository
